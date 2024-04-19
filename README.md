@@ -1,8 +1,9 @@
-POST /api/endpoint HTTP/1.1
-Host: example.com
-Content-Type: application/json
-Authorization: Bearer YOUR_API_KEY
-
-{
-  "data": "example payload"
+<code>
+POST /api/endpoint HTTP/1.1<br>
+Host: example.com<br>
+Content-Type: application/json<br>
+Authorization: Bearer YOUR_API_KEY<br><br>
+{<br>
+&nbsp;&nbsp;"data": "example payload"<br>
 }
+</code>
