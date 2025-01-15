@@ -1,115 +1,45 @@
 from jira import JIRA
 
-# Global Jira client
-jira_client = None
+# Jira URL and credentials
+jira_url = "https://example.atlassian.net"
+email = "your-email@example.com"
+api_token = "your-api-token"
 
-def authenticate_jira(jira_url, email, api_token):
+# Authenticate with Jira
+jira_client = JIRA(server=jira_url, basic_auth=(email, api_token))
+
+def add_comment_with_file(jira_client, issue_key, comment_text, file_path):
     """
-    Authenticate with the Jira server using API token.
+    Add a comment with a file attachment to a Jira issue.
+
+    Args:
+        jira_client (JIRA): Authenticated JIRA client.
+        issue_key (str): Key of the issue to comment on (e.g., "IS-123").
+        comment_text (str): Text of the comment.
+        file_path (str): Path to the file to attach.
+
+    Returns:
+        None
     """
-    global jira_client
-    jira_client = JIRA(server=jira_url, basic_auth=(email, api_token))
-    print("Authenticated successfully!")
+    try:
+        # Add the comment
+        comment = jira_client.add_comment(issue_key, comment_text)
+        print(f"Comment added: {comment.body}")
+
+        # Attach the file
+        with open(file_path, "rb") as file:
+            jira_client.add_attachment(issue=issue_key, attachment=file)
+        print(f"File '{file_path}' attached to issue {issue_key}.")
+    except Exception as e:
+        print(f"Error adding comment or attaching file: {e}")
 
 
-def get_issues_from_board(project_key, max_results=10):
-    """
-    Fetch issues from a specific project or board.
-    """
-    jql_query = f'project = "{project_key}" ORDER BY created DESC'
-    issues = jira_client.search_issues(jql_query, maxResults=max_results)
-    print(f"Fetched {len(issues)} issues from the project '{project_key}':")
-    for issue in issues:
-        print(f"{issue.key}: {issue.fields.summary}")
+# Example usage
+issue_key = "IS-123"  # Replace with your issue key
+comment_text = "This is an automated comment with a file attachment."
+file_path = "example.txt"  # Replace with the path to your file
 
+add_comment_with_file(jira_client, issue_key, comment_text, file_path)
 
-def create_issue(project_key, summary, description, issue_type="Task"):
-    """
-    Create a new issue in a specific project.
-    """
-    new_issue = jira_client.create_issue(
-        project=project_key,
-        summary=summary,
-        description=description,
-        issuetype={"name": issue_type},
-    )
-    print(f"Issue {new_issue.key} created successfully.")
-
-
-def update_issue(issue_key, summary=None, description=None):
-    """
-    Update an existing issue's summary and/or description.
-    """
-    issue = jira_client.issue(issue_key)
-    fields = {}
-    if summary:
-        fields["summary"] = summary
-    if description:
-        fields["description"] = description
-    
-    if fields:
-        issue.update(fields=fields)
-        print(f"Issue {issue_key} updated successfully.")
-    else:
-        print("No fields to update.")
-
-
-def add_comment(issue_key, comment):
-    """
-    Add a comment to an issue.
-    """
-    jira_client.add_comment(issue_key, comment)
-    print(f"Comment added to issue {issue_key}.")
-
-
-def main():
-    # Replace with your Jira details
-    jira_url = "https://vbrick.atlassian.net"
-    email = "your-email@example.com"
-    api_token = "your-api-token"
-
-    # Authenticate
-    authenticate_jira(jira_url, email, api_token)
-
-    # Options menu
-    while True:
-        print("\nOptions:")
-        print("1. Get issues from a board")
-        print("2. Create a new issue")
-        print("3. Update an issue")
-        print("4. Add a comment to an issue")
-        print("5. Exit")
-        
-        choice = input("Enter your choice (1-5): ")
-        
-        if choice == "1":
-            project_key = input("Enter the project key (e.g., IS): ")
-            get_issues_from_board(project_key)
-        
-        elif choice == "2":
-            project_key = input("Enter the project key (e.g., IS): ")
-            summary = input("Enter the issue summary: ")
-            description = input("Enter the issue description: ")
-            create_issue(project_key, summary, description)
-        
-        elif choice == "3":
-            issue_key = input("Enter the issue key (e.g., IS-123): ")
-            summary = input("Enter new summary (leave blank to skip): ")
-            description = input("Enter new description (leave blank to skip): ")
-            update_issue(issue_key, summary or None, description or None)
-        
-        elif choice == "4":
-            issue_key = input("Enter the issue key (e.g., IS-123): ")
-            comment = input("Enter the comment: ")
-            add_comment(issue_key, comment)
-        
-        elif choice == "5":
-            print("Exiting...")
-            break
-        
-        else:
-            print("Invalid choice. Please try again.")
-
-
-if __name__ == "__main__":
-    main()
+# Close the Jira session
+jira_client.close()
