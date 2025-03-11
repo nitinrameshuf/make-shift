@@ -1,38 +1,20 @@
-from falconpy import ContainerSecurity
-import time
+from falconpy import ImageAssessment
 
 # Initialize FalconPy Client
-falcon = ContainerSecurity(client_id="your_client_id", client_secret="your_client_secret")
+falcon = ImageAssessment(client_id="your_client_id", client_secret="your_client_secret")
 
-# Step 1: Request CSV Export with Filter for "latest" Tag
-export_response = falcon.query_vulnerabilities_combined(
-    parameters={
-        "export": "true",
-        "format": "csv",
-        "filter": "tag:'latest'"  # Case-sensitive filter
-    }
-)
+# Define parameters to filter by "latest" tag
+params = {
+    "filter": "tags:['latest']",  # Exact match for tag "latest"
+    "limit": 100  # Adjust the limit as needed
+}
 
-# Check if request was successful
-if export_response["status_code"] == 202:
-    # Extract export ID
-    export_id = export_response["body"]["resources"][0]
-    print(f"Export initiated, ID: {export_id}")
+# API Call to Fetch Container Images
+response = falcon.GetCombinedImages(parameters=params)
 
-    # Step 2: Wait for the export to complete
-    time.sleep(10)  # Adjust this if needed based on API response time
-
-    # Step 3: Download the CSV
-    download_response = falcon.get_vulnerability_export(
-        ids=[export_id]
-    )
-
-    # Save to file
-    csv_filename = "filtered_vulnerability_export.csv"
-    with open(csv_filename, "wb") as file:
-        file.write(download_response["body"])
-
-    print(f"CSV Report saved as {csv_filename}")
-
+# Check response status
+if response["status_code"] == 200:
+    images = response["body"]["resources"]
+    print("Retrieved Container Images:", images)
 else:
-    print(f"Failed to initiate export: {export_response}")
+    print("Error:", response)
