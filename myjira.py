@@ -1,45 +1,38 @@
-from jira import JIRA
+from falconpy import ContainerSecurity
+import time
 
-# Jira URL and credentials
-jira_url = "https://example.atlassian.net"
-email = "your-email@example.com"
-api_token = "your-api-token"
+# Initialize FalconPy Client
+falcon = ContainerSecurity(client_id="your_client_id", client_secret="your_client_secret")
 
-# Authenticate with Jira
-jira_client = JIRA(server=jira_url, basic_auth=(email, api_token))
+# Step 1: Request CSV Export with Filter for "latest" Tag
+export_response = falcon.query_vulnerabilities_combined(
+    parameters={
+        "export": "true",
+        "format": "csv",
+        "filter": "tag:'latest'"  # Case-sensitive filter
+    }
+)
 
-def add_comment_with_file(jira_client, issue_key, comment_text, file_path):
-    """
-    Add a comment with a file attachment to a Jira issue.
+# Check if request was successful
+if export_response["status_code"] == 202:
+    # Extract export ID
+    export_id = export_response["body"]["resources"][0]
+    print(f"Export initiated, ID: {export_id}")
 
-    Args:
-        jira_client (JIRA): Authenticated JIRA client.
-        issue_key (str): Key of the issue to comment on (e.g., "IS-123").
-        comment_text (str): Text of the comment.
-        file_path (str): Path to the file to attach.
+    # Step 2: Wait for the export to complete
+    time.sleep(10)  # Adjust this if needed based on API response time
 
-    Returns:
-        None
-    """
-    try:
-        # Add the comment
-        comment = jira_client.add_comment(issue_key, comment_text)
-        print(f"Comment added: {comment.body}")
+    # Step 3: Download the CSV
+    download_response = falcon.get_vulnerability_export(
+        ids=[export_id]
+    )
 
-        # Attach the file
-        with open(file_path, "rb") as file:
-            jira_client.add_attachment(issue=issue_key, attachment=file)
-        print(f"File '{file_path}' attached to issue {issue_key}.")
-    except Exception as e:
-        print(f"Error adding comment or attaching file: {e}")
+    # Save to file
+    csv_filename = "filtered_vulnerability_export.csv"
+    with open(csv_filename, "wb") as file:
+        file.write(download_response["body"])
 
+    print(f"CSV Report saved as {csv_filename}")
 
-# Example usage
-issue_key = "IS-123"  # Replace with your issue key
-comment_text = "This is an automated comment with a file attachment."
-file_path = "example.txt"  # Replace with the path to your file
-
-add_comment_with_file(jira_client, issue_key, comment_text, file_path)
-
-# Close the Jira session
-jira_client.close()
+else:
+    print(f"Failed to initiate export: {export_response}")
