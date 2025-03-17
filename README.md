@@ -43,3 +43,5 @@ if export_response["status_code"] == 202:
 
 else:
     print(f"Failed to initiate export: {export_response}")
+
+https://raw.githubusercontent.com/sparkfun/Arduino_Apollo3/main/package_sparkfun_apollo3_index.json
