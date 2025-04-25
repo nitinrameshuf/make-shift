@@ -1,11 +1,47 @@
-<!-- templates/dashboard.html -->
-<!DOCTYPE html>
+html = f"""
 <html>
-<head>
-    <title>Dashboard</title>
-</head>
-<body>
-    <h1>Welcome, {{ username }}</h1>
-    <p>Your dashboard has been created. <a href="{{ download_link }}">Download your dashboard</a></p>
-</body>
+  <body style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+    <h2 style="color: #2E86C1;">📊 Weekly Security Posture Report – {datetime.now().strftime('%d %b %Y')}</h2>
+
+    <h3 style="color: #1F618D;">🔍 Exploitability Exposure</h3>
+    <table cellpadding="8" cellspacing="0" width="100%" style="border-collapse: collapse;">
+      <tr style="background-color: #f2f2f2;"><th align="left">Metric</th><th align="left">Value</th></tr>
+      <tr><td>Confirmed Active Exploits</td><td>4 / 23</td></tr>
+      <tr style="background-color: #f9f9f9;"><td>Known Exploits Available</td><td>7 / 23</td></tr>
+    </table>
+
+    <h3 style="color: #C0392B;">🚨 Critical Risk Indicators</h3>
+    <table cellpadding="8" cellspacing="0" width="100%" style="border-collapse: collapse;">
+      <tr style="background-color: #f2f2f2;"><th align="left">Metric</th><th align="left">Value</th></tr>
+      <tr><td>Critical Severity Vulnerabilities</td><td>2 / 23</td></tr>
+      <tr style="background-color: #f9f9f9;"><td>High Severity Vulnerabilities</td><td>5 / 23</td></tr>
+    </table>
+
+    <h3 style="color: #884EA0;">⏳ CVE Exposure Timeline</h3>
+    <table cellpadding="8" cellspacing="0" width="100%" style="border-collapse: collapse;">
+      <tr style="background-color: #f2f2f2;"><th align="left">Metric</th><th align="left">Value</th></tr>
+      <tr><td>CVEs Past Remediation Deadline</td><td>3 / 10</td></tr>
+      <tr style="background-color: #f9f9f9;"><td>CVEs Approaching Due Date (30 Days)</td><td>6 / 10</td></tr>
+    </table>
+
+    <h3 style="color: #CA6F1E;">⚠️ Alerts & Container Changes</h3>
+    <table cellpadding="8" cellspacing="0" width="100%" style="border-collapse: collapse;">
+      <tr style="background-color: #f2f2f2;"><th>Missing Containers</th><th>New Containers</th></tr>
+      <tr><td>auth-service at prod</td><td>billing-api at staging</td></tr>
+      <tr style="background-color: #f9f9f9;"><td>db-replica at dev</td><td>reporter at qa</td></tr>
+    </table>
+
+    <h3 style="color: #196F3D;">⬆️ Component Upgrade Summary</h3>
+    <table cellpadding="8" cellspacing="0" width="100%" style="border-collapse: collapse;">
+      <tr style="background-color: #f2f2f2;"><th>Component</th><th>From Version</th><th>To Version</th></tr>
+      <tr><td>nginx</td><td>1.21</td><td>1.23</td></tr>
+      <tr style="background-color: #f9f9f9;"><td>redis</td><td>6.2.1</td><td>7.0.0</td></tr>
+      <tr><td>openssl</td><td>1.1.1k</td><td>1.1.1w</td></tr>
+    </table>
+
+    <p style="margin-top: 30px; font-size: 12px; color: #999;">
+      This is an automated security posture summary. For detailed analysis, contact your DevSecOps team.
+    </p>
+  </body>
 </html>
+"""
