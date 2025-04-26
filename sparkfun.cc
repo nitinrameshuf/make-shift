@@ -2,19 +2,24 @@
 
 Servo myServo;
 int servoPin = 7;
+int ledPin = LED_BUILTIN; // Onboard LED pin (usually built-in)
 
 void setup() {
     Serial.begin(9600);  // Serial communication at 9600 baud
     myServo.attach(servoPin);
+    pinMode(ledPin, OUTPUT);  // Set LED pin as output
     Serial.println("Waiting for joystick value (0-26400):");
 }
 
 void loop() {
     if (Serial.available()) {
+        digitalWrite(ledPin, HIGH);  // 🔥 Turn ON LED when serial input starts
+
         String input = Serial.readStringUntil('\n');  
         input.trim();  
 
         if (input.length() == 0) {
+            digitalWrite(ledPin, LOW); // Turn OFF LED if no useful data
             return;
         }
 
@@ -49,5 +54,7 @@ void loop() {
         Serial.println(" degrees");
 
         Serial.println("Waiting for next joystick value:");
+
+        digitalWrite(ledPin, LOW);  // 🧠 Turn OFF LED after processing the input
     }
 }
