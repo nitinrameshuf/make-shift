@@ -1,60 +1,57 @@
-#include <Servo.h>
+#!/bin/bash
 
-Servo myServo;
-int servoPin = 7;
-int ledPin = LED_BUILTIN; // Onboard LED pin (usually built-in)
+set -e
 
-void setup() {
-    Serial.begin(9600);  // Serial communication at 9600 baud
-    myServo.attach(servoPin);
-    pinMode(ledPin, OUTPUT);  // Set LED pin as output
-    Serial.println("Waiting for joystick value (0-26400):");
+DOWNLOAD_DIR=$HOME/greenbone-community-container
+RELEASE="22.4"
+
+installed() {
+    local failed=0
+    if [ -z "$2" ]; then
+        if ! [ -x "$(command -v "$1")" ]; then
+            failed=1
+        fi
+    else
+        local ret=0
+        "$@" &> /dev/null || ret=$?
+        if [ "$ret" -ne 0 ]; then
+            failed=1
+        fi
+    fi
+
+    if [ $failed -ne 0 ]; then
+        echo "$* is not available. See https://greenbone.github.io/docs/latest/$RELEASE/container/#prerequisites."
+        exit 1
+    fi
 }
 
-void loop() {
-    if (Serial.available()) {
-        digitalWrite(ledPin, HIGH);  // 🔥 Turn ON LED when serial input starts
+installed curl
+installed docker
+installed docker compose
 
-        String input = Serial.readStringUntil('\n');  
-        input.trim();  
+mkdir -p "$DOWNLOAD_DIR" && cd "$DOWNLOAD_DIR"
 
-        if (input.length() == 0) {
-            digitalWrite(ledPin, LOW); // Turn OFF LED if no useful data
-            return;
-        }
+echo "Downloading docker-compose file..."
+curl -f -O https://greenbone.github.io/docs/latest/_static/docker-compose.yml
 
-        int joystickValue = input.toInt();  
+echo "Pulling Greenbone Community Containers"
+docker compose -f "$DOWNLOAD_DIR"/docker-compose.yml pull
+echo
 
-        // Constrain joystick value safely
-        joystickValue = constrain(joystickValue, 0, 26400);
+echo "Starting Greenbone Community Containers"
+docker compose -f "$DOWNLOAD_DIR"/docker-compose.yml up -d
+echo
 
-        // Map joystick (0–26400) to angle (0–180)
-        int angle = map(joystickValue, 0, 26400, 0, 180);
+read -r -s -p "Password for admin user: " password
+echo
+docker compose -f "$DOWNLOAD_DIR"/docker-compose.yml \
+    exec -u gvmd gvmd gvmd --user=admin --new-password="$password"
 
-        // Optional: Center deadzone smoothing
-        int center = 13200;  // Center of joystick
-        if (abs(joystickValue - center) < 500) {
-            angle = 90;
-        }
+echo
+echo "The feed data will now load. This process can take several minutes to hours."
+echo "Refer: https://greenbone.github.io/docs/latest/$RELEASE/container/workflows.html#loading-the-feed-changes"
+echo
 
-        // Fine-tune servo movement
-        if (angle == 0) {
-            Serial.println("Fine-tuning 0-degree position...");
-            myServo.writeMicroseconds(525);  // Adjust this value if needed
-        } else {
-            // Map angle to pulse width (MG996R-style servo)
-            int pulseWidth = map(angle, 0, 180, 500, 2500); 
-            myServo.writeMicroseconds(pulseWidth);
-        }
-
-        Serial.print("Joystick: ");
-        Serial.print(joystickValue);
-        Serial.print(" -> Servo moved to: ");
-        Serial.print(angle);
-        Serial.println(" degrees");
-
-        Serial.println("Waiting for next joystick value:");
-
-        digitalWrite(ledPin, LOW);  // 🧠 Turn OFF LED after processing the input
-    }
-}
+# Display access instructions instead of trying to launch a browser
+IP=$(hostname -I | awk '{print $1}')
+echo "Access the Greenbone Security Assistant web interface at: http://$IP:9392"
