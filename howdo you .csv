@@ -1,0 +1,17 @@
+Event #,Event Name,Event Time,Username,Event Source,Resource Type,Resource Name,Action Description
+16,PutImage,2025-06-12T23:17:14Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Image,patch-fix:latest,Publishes poisoned image manifest under existing tag.
+15,CompleteLayerUpload,2025-06-12T23:16:30Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Layer,patch-fix@sha256:layer3digest,Finalizes new image layer.
+14,UploadLayerPart,2025-06-12T23:16:09Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Layer,patch-fix@sha256:layer3digest,Uploads part of poisoned image.
+13,InitiateLayerUpload,2025-06-12T23:15:44Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Repository,patch-fix,Begins upload of poisoned layer.
+12,GetDownloadUrlForLayer,2025-06-12T23:09:13Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Layer,patch-fix@sha256:layer1,Downloads layer 3.
+11,GetDownloadUrlForLayer,2025-06-12T23:09:09Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Layer,patch-fix@sha256:layer2,Downloads layer 2.
+10,GetDownloadUrlForLayer,2025-06-12T23:09:05Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Layer,patch-fix@sha256:layer1,Downloads layer 1 of the image.
+9,BatchGetImage,2025-06-12T23:08:36Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Image,patch-fix:latest,Retrieves manifest for chosen image.
+8,ListImages,2025-06-12T23:06:18Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Repository,patch-fix,Lists image tags/digests in a repo.
+7,GetAuthorizationToken,2025-06-12T23:05:14Z,hotfix-temp-user,sts.amazonaws.com,,,Allows Docker to authenticate to ECR.
+6,DescribeRepositories,2025-06-12T23:04:24Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Repository,media-uploader,Metadata for repos 9–10.
+5,DescribeRepositories,2025-06-12T23:04:18Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Repository,auth-core,Metadata for repos 7–8.
+4,DescribeRepositories,2025-06-12T23:04:11Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Repository,analytics-core,Metadata for repos 4–6.
+3,DescribeRepositories,2025-06-12T23:04:03Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Repository,patch-fix,Gets metadata about first 3 repos.
+2,ListRepositories,2025-06-12T23:03:45Z,hotfix-temp-user,ecr.amazonaws.com,AWS::ECR::Repository,,Lists ECR repositories in account.
+1,GetCallerIdentity,2025-06-12T23:00:03Z,hotfix-temp-user,sts.amazonaws.com,AWS::IAM::User,hotfix-temp-user,Validates that credentials are active.
