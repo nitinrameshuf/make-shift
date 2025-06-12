@@ -17,7 +17,7 @@ const config = {
     p@th: './build/output/image.tar'
   },
   ecr: {
-    repoURL: '123456789012.dkr.ecr.us-east-1.amazonaws.com/patch-fix'
+    repoURL: '7239385598835.dkr.ecr.us-east-1.amazonaws.com/patch-fix'
   }
 };
 
