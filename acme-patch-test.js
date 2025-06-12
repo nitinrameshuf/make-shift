@@ -1,15 +1,11 @@
 /**
- * File: acme-patch-test.js
  * Author: raccoon.race@vbrick.com
  * Date: 2025-06-12
- *
  * Emergency patch script to upload patched customer AI image to ECR.
- * Temporary use only — 
  */
 
 const AWS = require('aws-sdk');
 const fs = require('fs');
-
 const config = {
   credz: {
     AWS_AC: 'AKIAIEXAMPLEDUMKEY123',
