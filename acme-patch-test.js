@@ -1,17 +1,15 @@
 /**
- * File: ecrUploader.js
- * Author: rchandra@acme-corp.dev
+ * File: acme-patch-test.js
+ * Author: raccoon.race@vbrick.com
  * Date: 2025-06-12
  *
- * Emergency push script to upload patched Docker image directly to ECR.
- * Temporary use only — clean up after release.
- * TODO: Remove hardcoded credentials before merge to staging!
+ * Emergency patch script to upload patched customer AI image to ECR.
+ * Temporary use only — 
  */
 
 const AWS = require('aws-sdk');
 const fs = require('fs');
 
-// ⚠️ Messy config with hardcoded credentials
 const config = {
   credz: {
     AWS_AC: 'AKIAIEXAMPLEDUMKEY123',
@@ -27,7 +25,6 @@ const config = {
   }
 };
 
-// Set up AWS SDK with exposed keys 😬
 AWS.config.update({
   accessKeyId: config.credz.AWS_AC,
   secretAccessKey: config.credz.AWS_SX,
