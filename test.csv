@@ -1,0 +1,10 @@
+Event #,Event Name,Event Time,Username,Event Source,Action Description
+1,RunTask,2025-06-12T23:20:30Z,AssumedRole/ecs-task-role,ecs.amazonaws.com,Launches new ECS task using the poisoned image.
+2,AssumeRole,2025-06-12T23:25:30Z,AssumedRole/ecs-task-role,sts.amazonaws.com,Task execution role assumed to pull from ECR.
+3,GetAuthorizationToken,2025-06-12T23:26:30Z,AssumedRole/ecs-task-role,ecr.amazonaws.com,Retrieves ECR auth token for image pull.
+4,BatchGetImage,2025-06-12T23:27:30Z,AssumedRole/ecs-task-role,ecr.amazonaws.com,Fetches manifest for poisoned image.
+5,GetDownloadUrlForLayer,2025-06-12T23:28:30Z,AssumedRole/ecs-task-role,ecr.amazonaws.com,Downloads image layer from ECR.
+6,AssumeRole,2025-06-12T23:30:30Z,AssumedRole/ecs-task-role,sts.amazonaws.com,Task assumes IAM task role with S3 access.
+7,ListBuckets,2025-06-12T23:31:30Z,AssumedRole/ecs-task-role,s3.amazonaws.com,Enumerates accessible S3 buckets.
+8,ListObjectsV2,2025-06-12T23:32:30Z,AssumedRole/ecs-task-role,s3.amazonaws.com,Lists objects in a specific S3 bucket.
+9,GetObject,2025-06-12T23:33:30Z,AssumedRole/ecs-task-role,s3.amazonaws.com,Downloads object(s) from the bucket.
