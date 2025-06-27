@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <title>Shield AI Assistant</title>
 
-  <!-- Load only the JS bundle -->
+  <!-- ✅ Load ONLY from working bundle version -->
   <script src="https://cdn.jsdelivr.net/npm/deep-chat@2.2.1/dist/deepChat.bundle.js"></script>
 
   <style>
@@ -16,10 +16,12 @@
       padding: 2rem;
       margin: 0;
     }
+
     h2 {
       text-align: center;
       margin-bottom: 1rem;
     }
+
     deep-chat {
       display: block;
       width: 600px;
@@ -27,15 +29,18 @@
       margin: 0 auto;
       background: white;
       border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
     }
   </style>
 </head>
 <body>
   <h2>🛡️ Shield AI Assistant</h2>
+
+  <!-- ✅ No JS expression, must be pure string -->
   <deep-chat
-    connect='{"url":"{% url "ai_chat_api" %}","method":"POST"}'
+    connect='{"url": "{% url "onehome-chat" %}", "method": "POST"}'
     inputPlaceholder="Ask Shield AI anything..."
   ></deep-chat>
+
 </body>
 </html>
