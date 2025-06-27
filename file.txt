@@ -1,10 +1,10 @@
-<decoder name="cisco-asa-ftd-wrapper">
-  <prematch>%FTD</prematch>
-  <regex>^.*%FTD-\d+-\d+: (?<kv_data>.*)</regex>
-</decoder>
+<!-- In your <head> -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/deep-chat/dist/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/deep-chat/dist/deepChat.min.js"></script>
 
-<decoder name="cisco-asa-ftd-kv">
-  <parent>cisco-asa-ftd-wrapper</parent>
-  <type>key_value</type>
-  <separator>: </separator>
-</decoder>
+<!-- In your <body> -->
+<deep-chat
+  request='{"url": "/ai-chat-api/", "method": "POST"}'
+  style="max-width: 600px; margin: 2rem auto;"
+  inputPlaceholder="Ask Shield AI anything..."
+></deep-chat>
