@@ -1,28 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Chat Test</title>
-  <meta charset="utf-8">
+  <meta charset="UTF-8" />
+  <title>Shield AI Assistant</title>
+
+  <!-- Deep Chat Styles + Script -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/deep-chat/dist/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/deep-chat/dist/deepChat.min.js"></script>
+
+  <!-- Force chat widget visible -->
   <style>
     body {
-      background: #111;
+      background: #0f172a;
       color: white;
       font-family: sans-serif;
       padding: 2rem;
+    }
+    deep-chat {
+      display: block;
+      width: 600px;
+      height: 500px;
+      margin: 2rem auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
     }
   </style>
 </head>
 <body>
 
-<h2>Shield AI Assistant</h2>
+  <h2 style="text-align: center;">🛡️ Shield AI Assistant</h2>
 
-<deep-chat
-  request='{"url": "/ai-chat-api/", "method": "POST"}'
-  style="max-width: 600px; margin: 2rem auto; background: white;"
-  inputPlaceholder="Ask Shield AI anything..."
-></deep-chat>
+  <!-- Deep Chat Widget -->
+  <deep-chat
+    request='{"url": "/ai-chat-api/", "method": "POST"}'
+    inputPlaceholder="Ask me anything about your system..."
+  ></deep-chat>
 
 </body>
 </html>
