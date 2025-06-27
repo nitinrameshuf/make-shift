@@ -1,10 +1,38 @@
-<!-- In your <head> -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/deep-chat/dist/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/deep-chat/dist/deepChat.min.js"></script>
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
 
-<!-- In your <body> -->
-<deep-chat
-  request='{"url": "/ai-chat-api/", "method": "POST"}'
-  style="max-width: 600px; margin: 2rem auto;"
-  inputPlaceholder="Ask Shield AI anything..."
-></deep-chat>
+@csrf_exempt
+def ai_chat_api(request):
+    if request.method == 'POST':
+        try:
+            body = json.loads(request.body)
+            prompt = body.get("text", "")
+
+            # 🎯 Your AI logic or OpenAI call here
+            if "report" in prompt.lower():
+                return JsonResponse({
+                    "messages": [
+                        {
+                            "role": "ai",
+                            "type": "text",
+                            "text": "Here’s your report: [Download PDF](/media/report.pdf)"
+                        }
+                    ]
+                })
+
+            # Default reply
+            return JsonResponse({
+                "messages": [
+                    {
+                        "role": "ai",
+                        "type": "text",
+                        "text": f"You said: {prompt}"
+                    }
+                ]
+            })
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
