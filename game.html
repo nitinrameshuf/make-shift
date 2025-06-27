@@ -1,1 +1,55 @@
-d
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Shield AI Assistant</title>
+
+  <!-- Deep Chat Styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/deep-chat@latest/dist/style.css" />
+
+  <!-- Register Deep Chat Web Component -->
+  <script type="module">
+    import DeepChat from 'https://cdn.jsdelivr.net/npm/deep-chat@latest/dist/deepChat.mjs';
+    customElements.define('deep-chat', DeepChat);
+  </script>
+
+  <style>
+    body {
+      background-color: #0f172a;
+      font-family: Arial, sans-serif;
+      color: white;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    deep-chat {
+      display: block;
+      width: 600px;
+      height: 500px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>🛡️ Shield AI Assistant</h2>
+
+  <!-- Deep Chat Component -->
+  <deep-chat
+    request='{"url": "{% url "ai_chat_api" %}", "method": "POST"}'
+    inputPlaceholder="Ask Shield AI anything..."
+  ></deep-chat>
+
+</body>
+</html>
