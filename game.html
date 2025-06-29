@@ -1,15 +1,14 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-
-export default defineConfig({
-  plugins: [vue()],
-  build: {
-    rollupOptions: {
-      output: {
-        entryFileNames: `assets/index.js`,
-        chunkFileNames: `assets/chunk-[name].js`,
-        assetFileNames: `assets/[name][extname]`
-      }
-    }
-  }
-})
+<ul class="list-disc list-inside space-y-1 mb-4">
+  <li v-for="alert in top3Items" :key="alert.name">
+    {{ alert.name }} — 
+    <span
+      :class="{
+        'text-red-400 font-bold': alert.criticality === 'High',
+        'text-yellow-400': alert.criticality === 'Medium',
+        'text-green-400': alert.criticality === 'Low'
+      }"
+    >
+      {{ alert.criticality }}
+    </span>
+  </li>
+</ul>
