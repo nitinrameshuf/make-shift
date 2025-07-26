@@ -130,26 +130,37 @@
 
         <!-- Toggle Switch -->
         <!-- Modal Header with Toggle Left & Close Right -->
+        <!-- Modal Header with Toggle Left & Close Right -->
         <div class="flex justify-between items-center mb-6">
-          <!-- Toggle (Left) -->
-          <label class="flex items-center space-x-3 cursor-pointer">
-            <span class="text-lg text-gray-200 font-medium">Show:</span>
-            <div
-              @click="toggleState = toggleState === 'ALL' ? '24H' : 'ALL'"
-              class="relative w-14 h-7 flex items-center bg-green-600 rounded-full p-1 transition"
-              :class="{ 'bg-yellow-500': toggleState === '24H' }"
-            >
+          <!-- Toggle & MST -->
+          <div class="flex items-center space-x-4">
+            <!-- Toggle -->
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <span class="text-lg text-gray-200 font-medium">Show:</span>
               <div
-                class="bg-white w-5 h-5 rounded-full shadow-md transform duration-300"
-                :class="{ 'translate-x-7': toggleState === 'ALL' }"
-              ></div>
-            </div>
-            <span class="text-lg text-gray-300 font-semibold">
-              {{ toggleState }}
-            </span>
-          </label>
+                @click="toggleState = toggleState === 'ALL' ? '24H' : 'ALL'"
+                class="relative w-14 h-7 flex items-center bg-green-600 rounded-full p-1 transition"
+                :class="{ 'bg-yellow-500': toggleState === '24H' }"
+              >
+                <div
+                  class="bg-white w-5 h-5 rounded-full shadow-md transform duration-300"
+                  :class="{ 'translate-x-7': toggleState === 'ALL' }"
+                ></div>
+              </div>
+              <span class="text-lg text-gray-300 font-semibold">
+                {{ toggleState }}
+              </span>
+            </label>
 
-          <!-- Close Button (Right) -->
+            <!-- MST Button -->
+            <button
+              class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full shadow"
+            >
+              MST
+            </button>
+          </div>
+
+          <!-- Close Button -->
           <button
             @click="showModal = false"
             class="bg-gray-100 hover:bg-red-500 hover:text-white text-black font-medium px-5 py-2 rounded-full transition duration-200 shadow-sm"
@@ -707,6 +718,10 @@ export default {
       this.showCarousel = true;
     },
 
+    redirectWindow(secTask) {
+      console.log("Received :", secTask);
+    },
+
     switchGraph() {
       const container = this.$refs.vis;
       container.style.transition = "opacity 0.5s ease, transform 0.5s ease";
@@ -931,6 +946,32 @@ export default {
                 field: key,
                 editor: "textarea",
                 editable: true,
+                cellEdited: (cell) => {
+                  const rowData = cell.getData();
+                  const field = cell.getField();
+                  console.log("📝 Column-level cellEdited triggered");
+                  console.log(rowData);
+
+                  const payload = {
+                    title: rowData.title,
+                    region: rowData.region,
+                    severity: rowData.severity,
+                    justification: rowData.justification,
+                  };
+
+                  fetch("https://your-api.com/api/save-justification/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                  })
+                    .then((res) => res.json())
+                    .then((resp) => {
+                      console.log("✅ Justification saved:", resp);
+                    })
+                    .catch((err) => {
+                      console.error("❌ Save failed:", err);
+                    });
+                },
               };
             }
 
