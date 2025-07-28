@@ -1,0 +1,70 @@
+SEVERITY_WEIGHTS = {
+    'Critical': 1.0,
+    'High': 0.7,
+    'Medium': 0.4,
+    'Low': 0.1
+}
+
+CATEGORY_NORMALIZATION = {
+    'AWS_IOM': 100,               # Total severity points to max out this category
+    'Error_Containers': 50,
+    'Unmanaged_Assets': 20,
+    'WiFi_Misconfig': 30,
+    'Exploitable_Images': 50,
+    'Unscanned_Images': 50,
+    'Defender_Score': 10,
+    'Device_Config_Errors': 20,
+    'Non_Compliant_Devices': 30,
+}
+
+def calculate_security_score(submetric_counts: dict, weighted_scores: dict) -> float:
+    score = 100.0
+
+    for category, weight in weighted_scores.items():
+        raw_score = 0.0
+        max_score = CATEGORY_NORMALIZATION.get(category, 100)
+
+        # Category-specific logic
+        if category == 'AWS_IOM':
+            raw_score += (
+                submetric_counts.get('iom_critical', 0) * SEVERITY_WEIGHTS['Critical'] +
+                submetric_counts.get('iom_high', 0) * SEVERITY_WEIGHTS['High'] +
+                submetric_counts.get('iom_medium', 0) * SEVERITY_WEIGHTS['Medium'] +
+                submetric_counts.get('iom_low', 0) * SEVERITY_WEIGHTS['Low']
+            )
+
+        elif category == 'Error_Containers':
+            raw_score += sum([
+                submetric_counts.get('error_image_pull', 0),
+                submetric_counts.get('error_image_push', 0),
+                submetric_counts.get('error_unsupported_schema_version', 0),
+                submetric_counts.get('error_missing_config', 0)
+            ])
+
+        elif category == 'Unmanaged_Assets':
+            raw_score += submetric_counts.get('unmanaged_assets', 0)
+
+        elif category == 'WiFi_Misconfig':
+            raw_score += submetric_counts.get('wifi_misconfig', 0)
+
+        elif category == 'Exploitable_Images':
+            raw_score += submetric_counts.get('exploitable_images', 0)
+
+        elif category == 'Unscanned_Images':
+            raw_score += submetric_counts.get('unscanned_images', 0)
+
+        elif category == 'Defender_Score':
+            raw_score += submetric_counts.get('defender_errors', 0)
+
+        elif category == 'Device_Config_Errors':
+            raw_score += submetric_counts.get('device_config_errors', 0)
+
+        elif category == 'Non_Compliant_Devices':
+            raw_score += submetric_counts.get('non_compliant_devices', 0)
+
+        # Normalize and scale
+        normalized = min(raw_score / max_score, 1.0)
+        category_penalty = normalized * weight
+        score -= category_penalty
+
+    return round(max(score, 0), 2)
