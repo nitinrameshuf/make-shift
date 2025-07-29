@@ -101,7 +101,7 @@
       class="fixed inset-0 z-50 flex justify-center items-center bg-black/60 backdrop-blur-sm"
     >
       <div
-        class="w-[80%] h-[80%] max-w-6xl bg-white/20 backdrop-blur-xl text-white p-10 rounded-3xl shadow-2xl border border-white/20 transition-all animate-fadeIn relative"
+        class="w-[80%] h-[80%] max-w-6xl bg-white/20 backdrop-blur-xl text-white p-10 rounded-3xl shadow-2xl border border-white/20 transition-all animate-fadeIn relative overflow-y-auto"
       >
         <h2 class="text-2xl font-bold font-space mb-6 text-center">
           Security Score
@@ -223,6 +223,44 @@
       </div>
     </div>
 
+    <!-- FedRamp Modal -->
+    <div
+      v-if="showFedRampModal"
+      class="fixed inset-0 z-50 flex justify-center items-center bg-black/60 backdrop-blur-sm"
+    >
+      <div
+        class="w-[80%] h-[80%] max-w-6xl bg-white/20 backdrop-blur-xl text-white p-10 rounded-3xl shadow-2xl border border-white/20 transition-all animate-fadeIn overflow-x-auto"
+      >
+        <!-- Title and Close -->
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold font-space text-center w-full">
+            FedRamp Insights
+          </h2>
+          <button
+            @click="showFedRampModal = false"
+            class="absolute top-4 right-4 bg-white text-black rounded-full px-3 py-1 shadow hover:bg-red-600 hover:text-white transition"
+          >
+            Close
+          </button>
+        </div>
+
+        <!-- Scrollable Tables Container -->
+        <div class="flex space-x-6 overflow-x-auto pb-4 text-black">
+          <div
+            v-for="(table, idx) in fedRampTables"
+            :key="idx"
+            class="mb-8 rounded-xl text-black shadow-lg overflow-hidden border border-white/20 bg-white/10 backdrop-blur-md"
+          >
+            <TabulatorTable
+              :title="table.title"
+              :data="table.data"
+              :columns="table.columns"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Graph Canvas -->
     <div class="flex-1 relative z-10 w-full">
       <div ref="vis" class="w-full h-full"></div>
@@ -289,7 +327,7 @@
       >
         <h2 class="text-2xl font-bold font-space mb-6 text-center">
           Showing <b>{{ toggleState }}</b> alerts for
-          <b>{{ cleanNodeLabel }}</b>
+          <b>{{ this.formatTableTitle(cleanNodeLabel) }}</b>
         </h2>
 
         <!-- Modal Header with Toggle Left & Close Right -->
@@ -418,7 +456,12 @@
           &copy; {{ new Date().getFullYear() }} Shield One. All rights reserved.
         </p>
         <div class="space-x-4 mt-2 md:mt-0">
-          <a href="#" class="hover:text-indigo-300 transition">Privacy</a>
+          <a
+            href="#"
+            class="hover:text-indigo-300 transition"
+            @click.prevent="fetchFedRampData"
+            >FedRamp</a
+          >
           <a href="#" class="hover:text-indigo-300 transition">Terms</a>
           <a href="#" class="hover:text-indigo-300 transition">Contact</a>
         </div>
@@ -471,20 +514,20 @@ export default {
         { title: "Type", field: "type" },
       ],
       showDropdownList: false,
-      dropdownData: [
-        { service: "EMR", status: "true" },
-        { service: "EC2", status: "false" },
-        { service: "Glue", status: "none" },
-      ],
+      dropdownData: [],
       showGraph: false,
       metrics: [],
       expandedMetric: null,
       activeRange: "1D",
       graphItems: [],
+      fedRampTables: [],
+
+      showFedRampModal: false,
     };
   },
   mounted() {
     this.securityScoreValue();
+    this.fetchDropdownData();
     this.$nextTick(() => {
       this.initGraph(); // Your function to initialize the vis-network
     });
@@ -763,6 +806,48 @@ export default {
       this.network.on("zoom", this.handleZoom);
     },
 
+    async fetchFedRampData() {
+      try {
+        this.showFedRampModal = true;
+        await this.$nextTick();
+
+        const result1 = {
+          tableAlpha: [
+            { service: "API Gateway", status: "Compliant", notes: "Updated" },
+            { service: "Lambda", status: "Pending", notes: "Needs review" },
+            { service: "Lambda", status: "Pending", notes: "Needs review" },
+            { service: "Lambda", status: "Pending", notes: "Needs review" },
+            { service: "Lambda", status: "Pending", notes: "Needs review" },
+            { service: "Lambda", status: "Pending", notes: "Needs review" },
+          ],
+          // ,
+          // tableBeta: [
+          //   { control: "AC-1", level: "Moderate", owner: "Security" },
+          //   { control: "CM-2", level: "High", owner: "Engineering" },
+          // ],
+        };
+
+        this.fedRampTables = Object.entries(result1).map(([key, records]) => {
+          const sample = records[0] || {};
+          const columns = Object.keys(sample).map((k) => ({
+            title: this.formatColumnTitle(k),
+            field: k,
+          }));
+
+          return {
+            title: this.formatTableTitle(key),
+            data: records,
+            columns,
+          };
+        });
+        console.log(this.fedRampTables);
+        return this.fedRampTables[0]?.data || ["Bad rerre"];
+      } catch (err) {
+        console.error("❌ FedRamp fetch error:", err);
+        this.fedRampTables = [];
+      }
+    },
+
     getBadgeStyle(node) {
       const pos = this.network.getPositions([node.id])[node.id];
       const dom = this.network.canvasToDOM(pos);
@@ -847,7 +932,7 @@ export default {
             current: value.current,
             old: value.old,
             delta: value.current - value.old,
-            expanded: false, // required for toggling
+            expanded: Object.keys(children).length > 0, // required for toggling
             children: Object.keys(children).length > 0 ? children : null,
           };
         });
@@ -882,9 +967,6 @@ export default {
             timeAxis: {
               scale: "day",
               step: 1,
-              format: {
-                major: "ddd D MMM",
-              },
             },
             showCurrentTime: false,
           };
@@ -912,9 +994,16 @@ export default {
 
     async fetchDropdownData() {
       try {
-        const res = await fetch("https://your-api.com/api/dropdown-status");
-        const data = await res.json(); // expecting: [{ service: 'EMR', status: 'true' }, ...]
-        this.dropdownData = data;
+        // const res = await fetch("https://your-api.com/api/dropdown-status");
+        // const data = await res.json(); // expecting: [{ service: 'EMR', status: 'true' }, ...]
+        const data1 = [
+          { service: "EMR", status: "true" },
+          { service: "EC2", status: "false" },
+          { service: "Glue", status: "none" },
+          { service: "Lambda", status: "true" },
+          { service: "Zap", status: "true" },
+        ];
+        this.dropdownData = data1;
       } catch (err) {
         console.error("❌ Failed to load dropdown:", err);
       }
