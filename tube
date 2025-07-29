@@ -52,6 +52,18 @@
             />
           </div>
           <div class="relative">
+            <!-- Toggle Button -->
+            <button
+              @click="openInsightsModal"
+              class="bg-grey-600 text-white px-3 py-1 font-space glow-text tracking-widest drop-shadow-star"
+            >
+              AI Insights
+            </button>
+
+            <!-- Native Date Picker Styled -->
+            <input v-if="showInsightsModal" />
+          </div>
+          <div class="relative">
             <button
               @click="showDropdownList = !showDropdownList"
               class="bg-grey-600 text-white px-3 py-1 font-space glow-text tracking-widest drop-shadow-star"
@@ -256,6 +268,45 @@
               :data="table.data"
               :columns="table.columns"
             />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Insights Modal -->
+    <div
+      v-if="showInsightsModal"
+      class="fixed inset-0 z-50 flex justify-center items-center bg-black/60 backdrop-blur-sm"
+    >
+      <div
+        class="w-[80%] h-[80%] max-w-4xl bg-white/20 backdrop-blur-xl text-white p-10 rounded-3xl shadow-2xl border border-white/20 transition-all animate-fadeIn overflow-y-auto max-h-[80vh]"
+      >
+        <!-- Title -->
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold font-space text-center w-full">
+            {{ insightsTitle }}
+          </h2>
+          <button
+            @click="showInsightsModal = false"
+            class="absolute top-4 right-4 bg-white text-black rounded-full px-3 py-1 shadow hover:bg-red-600 hover:text-white transition"
+          >
+            Close
+          </button>
+        </div>
+
+        <!-- Dynamic Fields -->
+        <div class="space-y-4 text-white">
+          <div
+            v-for="(field, index) in insightsFields"
+            :key="index"
+            class="flex flex-col"
+          >
+            <label class="font-bold text-lg mb-1">{{ field.label }}</label>
+            <textarea
+              class="bg-white/10 border border-white/20 p-3 rounded-md text-white resize-none"
+              rows="3"
+              v-model="field.value"
+            ></textarea>
           </div>
         </div>
       </div>
@@ -524,6 +575,9 @@ export default {
       fedRampTables: [],
 
       showFedRampModal: false,
+      showInsightsModal: false,
+      insightsTitle: "🧠 AI Insights Panel",
+      insightsFields: [],
     };
   },
   mounted() {
@@ -805,6 +859,22 @@ export default {
         edges
       );
       this.network.on("zoom", this.handleZoom);
+    },
+
+    async openInsightsModal() {
+      this.showInsightsModal = true;
+
+      // Simulate a fetch result
+      const result = {
+        Findings: "Lambda functions are overprovisioned.",
+        Suggestions: "Use Graviton instances to reduce cost.",
+        Score: "Moderate Risk",
+      };
+
+      this.insightsFields = Object.entries(result).map(([label, value]) => ({
+        label,
+        value,
+      }));
     },
 
     async fetchFedRampData() {
