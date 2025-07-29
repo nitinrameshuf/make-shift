@@ -1,0 +1,1289 @@
+<template>
+  <div
+    class="h-screen w-full bg-starfield text-white font-inter relative overflow-hidden flex flex-col pt-16"
+  >
+    <!-- Header -->
+    <header
+      class="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-black bg-opacity-40"
+    >
+      <div
+        class="w-full px-4 md:px-8 py-4 flex justify-between items-center relative"
+      >
+        <!-- Left: Logo -->
+        <h1 class="text-3xl font-space tracking-widest drop-shadow-star">
+          ONE VIEWER
+        </h1>
+
+        <div class="flex items-center justify-center relative">
+          <!-- Clickable Score Text -->
+          <span
+            @click="securityScoreGraph"
+            class="absolute left-1/2 transform -translate-x-1/2 text-lg tracking-widest glow-text drop-shadow-star cursor-pointer whitespace-nowrap"
+          >
+            Security Score: {{ score }}
+          </span>
+        </div>
+
+        <!-- Right: Navigation -->
+        <!-- With vue-datepicker -->
+        <!-- Toggle Button -->
+
+        <nav class="flex items-center space-x-6 text-lg font-medium">
+          <!-- <a href="#home" class="hover:text-indigo-300 transition">Home</a>
+          <a href="#about" class="hover:text-indigo-300 transition">About</a> -->
+
+          <!-- Dropdown Modal -->
+          <!-- Relative container around the button and dropdown -->
+          <div class="relative">
+            <!-- Toggle Button -->
+            <button
+              @click="showDatePicker = !showDatePicker"
+              class="bg-grey-600 text-white px-3 py-1 font-space glow-text tracking-widest drop-shadow-star"
+            >
+              Date
+            </button>
+
+            <!-- Native Date Picker Styled -->
+            <input
+              v-if="showDatePicker"
+              type="date"
+              v-model="selectedDate"
+              class="absolute top-full left-0 mt-2 px-3 py-2 rounded bg-white text-black shadow border border-gray-300 z-50"
+            />
+          </div>
+          <div class="relative">
+            <button
+              @click="showDropdownList = !showDropdownList"
+              class="bg-grey-600 text-white px-3 py-1 font-space glow-text tracking-widest drop-shadow-star"
+            >
+              Health
+            </button>
+
+            <!-- Dropdown List -->
+            <div
+              v-if="showDropdownList"
+              class="absolute left-0 mt-2 w-64 bg-white/3 backdrop-blur-md text-white rounded-xl shadow-xl border border-white/30 z-50"
+            >
+              <div
+                v-for="(item, index) in dropdownData"
+                :key="index"
+                class="flex justify-between items-center px-4 py-2 border-b border-white/10"
+              >
+                <span>{{ item.service }}</span>
+                <div
+                  class="w-8 h-8 flex items-center justify-center rounded-full text-md font-bold text-white"
+                >
+                  {{
+                    item.status === "true"
+                      ? "🟢"
+                      : item.status === "false"
+                      ? "🔴"
+                      : "🟡"
+                  }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            @click="openShieldAI"
+            class="bg-grey-600 text-white px-3 py-1 font-space tracking-widest drop-shadow-star"
+          >
+            Shield AI
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Fullscreen Graph Modal (Centered Box) -->
+    <div
+      v-if="showGraph"
+      class="fixed inset-0 z-50 flex justify-center items-center bg-black/60 backdrop-blur-sm"
+    >
+      <div
+        class="w-[80%] h-[80%] max-w-6xl bg-white/20 backdrop-blur-xl text-white p-10 rounded-3xl shadow-2xl border border-white/20 transition-all animate-fadeIn relative"
+      >
+        <h2 class="text-2xl font-bold font-space mb-6 text-center">
+          Security Score
+        </h2>
+        <!-- Close Button -->
+        <button
+          @click="showGraph = false"
+          class="absolute top-4 right-4 bg-white text-black rounded-full px-3 py-1 shadow hover:bg-red-600 hover:text-white transition"
+        >
+          Close
+        </button>
+
+        <!-- Graph Container -->
+        <div
+          ref="graphContainer"
+          class="w-full h-[300px] bg-white rounded-xl p-4 shadow-inner overflow-hidden border border-gray-300"
+        ></div>
+
+        <!-- Summary Paragraph -->
+        <div
+          class="overflow-y-auto mt-4 px-4 py-2 bg-gray-200/10 rounded-xl text-lg text-white"
+        >
+          <p>I'm a sample body</p>
+        </div>
+
+        <!-- Time Range Selector -->
+        <!-- <div class="flex justify-center space-x-4 my-4 text-sm font-semibold">
+          <button
+            v-for="range in ['1D', '5D', '1M', '6M', 'Custom']"
+            :key="range"
+            @click="activeRange = range"
+            :class="[
+              'px-3 py-1 rounded-full border',
+              activeRange === range
+                ? 'bg-white text-black'
+                : 'text-white border-white/30',
+            ]"
+          >
+            {{ range }}
+          </button>
+        </div> -->
+
+        <!-- Metrics Cards -->
+        <!-- Dynamic Metrics Display (below graph) -->
+        <div class="flex gap-4 px-6 pt-4 flex-wrap justify-center">
+          <div
+            v-for="metric in metrics"
+            :key="metric.label"
+            class="group bg-gray-200/10 border border-gray-700 rounded-lg px-4 py-2 shadow cursor-pointer w-44 hover:bg-white/20 font-bold"
+            @click="toggleMetric(metric.label)"
+          >
+            <!-- Parent Metric Label -->
+            <p class="text-lg text-blue-300 font-bold group-hover:text-black">
+              {{ this.formatMetricTitle(metric.label) }}
+            </p>
+
+            <!-- Current & Delta -->
+            <div class="flex items-baseline justify-between mt-1 mb-2">
+              <span class="text-lg text-white font-semibold">
+                {{ metric.current }}
+              </span>
+              <span
+                class="text-sm font-semibold"
+                :class="metric.delta >= 0 ? 'text-green-400' : 'text-red-400'"
+              >
+                {{ metric.delta >= 0 ? "+" : "" }}{{ metric.delta }}
+              </span>
+            </div>
+
+            <!-- Nested Metrics -->
+            <div
+              v-if="metric.children && metric.expanded"
+              class="space-y-1 pt-1 border-t border-gray-600"
+            >
+              <div
+                v-for="(child, key) in metric.children"
+                :key="key"
+                class="flex justify-between items-baseline text-sm pl-1"
+              >
+                <span class="text-gray-300 font-medium">{{
+                  this.formatMetricTitle(key)
+                }}</span>
+                <div class="flex flex-col items-end">
+                  <span class="text-red-400 font-semibold text-sm">
+                    {{ child.current }}
+                  </span>
+                  <span
+                    class="text-xs"
+                    :class="
+                      child.delta >= 0 ? 'text-green-400' : 'text-red-400'
+                    "
+                  >
+                    ({{ child.delta >= 0 ? "+" : "" }}{{ child.delta }})
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- <div class="flex gap-4 overflow-x-auto px-2">
+          <div
+            v-for="metric in metrics"
+            :key="metric.label"
+            class="min-w-[140px] p-4 rounded-lg bg-white/10 text-white shadow border border-white/20"
+          >
+            <h4 class="text-sm text-blue-300 font-semibold">
+              {{ metric.label }}
+            </h4>
+            <p class="text-xl font-bold">{{ metric.value }}</p>
+            <p
+              class="text-sm font-medium"
+              :class="metric.delta >= 0 ? 'text-green-400' : 'text-red-400'"
+            >
+              {{ metric.delta >= 0 ? "+" : "" }}{{ metric.delta }}%
+            </p>
+          </div>
+        </div> -->
+      </div>
+    </div>
+
+    <!-- Graph Canvas -->
+    <div class="flex-1 relative z-10 w-full">
+      <div ref="vis" class="w-full h-full"></div>
+    </div>
+
+    <!-- Shield AI Chatbot Sidebar -->
+    <div
+      v-if="showChatbot"
+      class="fixed bottom-0 right-0 w-96 h-[90vh] bg-[#0b0e1c] text-white z-50 shadow-2xl transition-all animate-slideIn flex flex-col rounded-lg overflow-hidden"
+    >
+      <!-- Header -->
+      <div
+        class="flex justify-between items-center bg-[#12151b] px-4 py-3 border-b border-gray-700"
+      >
+        <h2 class="text-xl font-bold text-white">🛡️ Shield AI</h2>
+        <button
+          @click="showChatbot = false"
+          class="text-red-500 text-lg font-bold"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Chat Container with auto-scroll -->
+      <div ref="chatContainer" class="flex-1 overflow-y-auto flex flex-col">
+        <deep-chat
+          class="flex-1"
+          style="
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: #0b0e1c;
+          "
+          endpoint="https://api.openai.com/v1/chat/completions"
+          headers='{
+      "Authorization": "Bearer YOUR_API_KEY",
+      "Content-Type": "application/json"
+    }'
+          payload='{
+      "model": "gpt-3.5-turbo",
+      "messages": [{"role": "user", "content": "{{message}}"}]
+    }'
+        ></deep-chat>
+      </div>
+    </div>
+
+    <AlertCarousel
+      v-if="showCarousel"
+      :alerts="latestAlerts"
+      @close="showCarousel = false"
+    />
+
+    <!-- Dropdown Tabulator Modal -->
+    <!-- Scroll Alerts Dropdown Modal -->
+
+    <!-- MODAL -->
+    <div
+      v-if="showModal"
+      class="fixed inset-0 z-50 flex justify-center items-center bg-black/60 backdrop-blur-sm"
+    >
+      <div
+        class="w-[80%] h-[80%] max-w-6xl bg-white/20 backdrop-blur-xl text-white p-10 rounded-3xl shadow-2xl border border-white/20 transition-all animate-fadeIn"
+      >
+        <h2 class="text-2xl font-bold font-space mb-6 text-center">
+          Showing <b>{{ toggleState }}</b> alerts for
+          <b>{{ cleanNodeLabel }}</b>
+        </h2>
+
+        <!-- Modal Header with Toggle Left & Close Right -->
+        <div class="flex justify-between items-center mb-6">
+          <!-- Toggle & MST -->
+          <div class="flex items-center space-x-4">
+            <!-- Toggle -->
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <span class="text-lg text-gray-200 font-medium">Show:</span>
+              <div
+                @click="toggleState = toggleState === 'ALL' ? '24H' : 'ALL'"
+                class="relative w-14 h-7 flex items-center bg-green-600 rounded-full p-1 transition"
+                :class="{ 'bg-yellow-500': toggleState === '24H' }"
+              >
+                <div
+                  class="bg-white w-5 h-5 rounded-full shadow-md transform duration-300"
+                  :class="{ 'translate-x-7': toggleState === 'ALL' }"
+                ></div>
+              </div>
+              <span class="text-lg text-gray-300 font-semibold">
+                {{ toggleState }}
+              </span>
+            </label>
+
+            <!-- MST Button -->
+            <button
+              class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full shadow"
+            >
+              MST
+            </button>
+          </div>
+
+          <!-- Close Button -->
+          <button
+            @click="showModal = false"
+            class="bg-gray-100 hover:bg-red-500 hover:text-white text-black font-medium px-5 py-2 rounded-full transition duration-200 shadow-sm"
+          >
+            Close
+          </button>
+        </div>
+
+        <div class="overflow-y-auto max-h-[55vh] space-y-4 pr-1">
+          <!-- Summary Paragraph -->
+          <div
+            v-if="summaryText"
+            class="mb-6 p-4 rounded-lg bg-white/10 border border-white/20 shadow text-lg leading-relaxed text-white"
+          >
+            <p>{{ summaryText }}</p>
+          </div>
+
+          <div
+            v-for="(table, idx) in multiTables"
+            :key="idx"
+            class="mb-8 rounded-xl shadow-lg overflow-hidden border border-white/20 bg-white/10 backdrop-blur-md"
+          >
+            <TabulatorTable
+              :title="table.title"
+              :data="table.data"
+              :columns="table.columns"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div
+      v-if="showSidebar"
+      class="fixed top-0 right-0 w-96 h-full bg-[#12151b] text-white shadow-2xl z-[9999] p-6 overflow-y-auto transition-transform animate-slideIn"
+    >
+      <!-- Header Controls -->
+      <div class="flex items-center justify-between mb-6">
+        <!-- Left Controls: Toggle + Label -->
+        <div class="flex items-center space-x-4">
+          <!-- Toggle -->
+          <label class="flex items-center cursor-pointer">
+            <!-- Toggle Switch -->
+            <div class="flex items-center space-x-2">
+              <div
+                @click="toggleState = toggleState === 'ALL' ? '24H' : 'ALL'"
+                class="relative w-14 h-7 flex items-center bg-green-600 rounded-full p-1 cursor-pointer transition-colors duration-300"
+                :class="{
+                  'bg-yellow-500': toggleState === '24H',
+                }"
+              >
+                <div
+                  class="bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300"
+                  :class="{ 'translate-x-7': toggleState === 'ALL' }"
+                ></div>
+              </div>
+              <span class="text-sm text-gray-300 font-medium">
+                {{ toggleState }}
+              </span>
+            </div>
+          </label>
+
+          <!-- Node Label -->
+          <h3 class="text-base font-bold font-space whitespace-nowrap">
+            Alerts: {{ cleanNodeLabel }}
+          </h3>
+        </div>
+
+        <!-- Close Button -->
+        <button
+          @click="showSidebar = false"
+          class="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-full text-sm"
+        >
+          Close
+        </button>
+      </div>
+
+      <!-- Alerts List -->
+      <ul class="list-decimal ml-5 space-y-2 text-sm">
+        <li v-for="alert in allItems" :key="alert">{{ alert }}</li>
+      </ul>
+    </div>
+
+    <!-- Footer -->
+    <footer
+      class="bg-black bg-opacity-50 backdrop-blur-sm text-gray-300 text-sm py-4 mt-auto"
+    >
+      <div
+        class="max-w-screen-xl mx-auto px-6 md:px-16 flex flex-col md:flex-row justify-between items-center"
+      >
+        <p>
+          &copy; {{ new Date().getFullYear() }} Shield One. All rights reserved.
+        </p>
+        <div class="space-x-4 mt-2 md:mt-0">
+          <a href="#" class="hover:text-indigo-300 transition">Privacy</a>
+          <a href="#" class="hover:text-indigo-300 transition">Terms</a>
+          <a href="#" class="hover:text-indigo-300 transition">Contact</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+</template>
+
+
+<script>
+import { Network } from "vis-network";
+import { DataSet } from "vis-data";
+import { Graph2d } from "vis-timeline/standalone";
+import TabulatorTable from "./TabulatorTable.vue";
+import "../assets/styles/tabulator-tailwind.css";
+import { ZoomClusterManager } from "../utils/ZoomClusterManager.js";
+import AlertCarousel from "./AlertCarousel.vue";
+
+export default {
+  name: "NetworkGraph",
+  data() {
+    return {
+      network: null,
+      clusterManager: null,
+      lastScaleBucket: -1,
+      selectedNode: null,
+      showSidebar: false,
+      showModal: false,
+      top3Items: [],
+      allItems: [],
+      formInput: "",
+      formChoice: "",
+      modalX: 0,
+      modalY: 0,
+      showCarousel: false,
+      latestAlerts: [],
+      toggleState: "ALL",
+      showChatbot: false,
+      score: null,
+      isAlternateView: false,
+      showDatePicker: false,
+      selectedDate: new Date().toISOString().split("T")[0],
+      summaryText: "",
+      multiTables: [],
+      rawLabel: "node",
+      tableColumns: [
+        { title: "Service", field: "service" },
+        { title: "Alert Name", field: "name" },
+        { title: "Number", field: "number" },
+        { title: "Type", field: "type" },
+      ],
+      showDropdownList: false,
+      dropdownData: [
+        { service: "EMR", status: "true" },
+        { service: "EC2", status: "false" },
+        { service: "Glue", status: "none" },
+      ],
+      showGraph: false,
+      metrics: [],
+      expandedMetric: null,
+      activeRange: "1D",
+      graphItems: [],
+    };
+  },
+  mounted() {
+    this.securityScoreValue();
+    this.$nextTick(() => {
+      this.initGraph(); // Your function to initialize the vis-network
+    });
+
+    setTimeout(() => {
+      const navButtons = this.$refs.vis.querySelectorAll(".vis-button");
+      navButtons.forEach((btn) => {
+        if (!btn.classList.contains("vis-zoomExtends")) {
+          btn.style.display = "none"; // hide all except "fit to screen"
+        }
+      });
+    }, 0); // Wait for vis.js to render buttons
+  },
+  components: {
+    AlertCarousel, // <-- This is required
+    TabulatorTable,
+  },
+  computed: {
+    nodesWithBadges() {
+      const excludedIds = [1, 2, 3, 4];
+      return this.network
+        ? this.network.body.data.nodes
+            .get()
+            .filter((n) => !excludedIds.includes(n.id) && n.alertCount > 0)
+        : [];
+    },
+    dropdownColumns() {
+      return [
+        { title: "Service", field: "service", editable: false },
+        {
+          title: "Status",
+          field: "status",
+          editor: "select",
+          editorParams: {
+            values: {
+              true: "True",
+              false: "False",
+              none: "None",
+            },
+          },
+          formatter: (cell) => {
+            const val = cell.getValue();
+            const colors = {
+              true: "bg-green-500",
+              false: "bg-red-500",
+              none: "bg-yellow-400",
+            };
+            return `<div class="w-4 h-4 rounded-full mx-auto ${colors[val]}"></div>`;
+          },
+          hozAlign: "center",
+        },
+      ];
+    },
+    cleanNodeLabel() {
+      return (
+        this.selectedNode?.label
+          ?.replace(/<[^>]*>/g, "") // remove HTML
+          .replace(/\s*\(\d+\)/, "") // remove trailing "(number)"
+          .trim() || ""
+      );
+    },
+  },
+  watch: {
+    toggleState(newVal) {
+      if (newVal === "ALL") {
+        this.viewAllAlerts();
+      } else if (newVal === "24H") {
+        this.viewLast24Hours();
+      }
+    },
+    selectedDate(newDate) {
+      console.log("🗓️ Picked date:", newDate);
+    },
+  },
+  methods: {
+    initGraph() {
+      const staticNodes = [
+        // Root (center)
+        {
+          id: 1,
+          image: "/root2.png",
+          shape: "image",
+          size: 130,
+          x: 0,
+          y: 0,
+          fixed: true,
+        },
+
+        // AWS (left)
+        {
+          id: 2,
+          image: "/aws.png",
+          shape: "image",
+          size: 120,
+          x: -300,
+          y: 0,
+          fixed: true,
+        },
+        {
+          id: 5,
+          label: "EMR",
+          image: "/ecs.png",
+          shape: "image",
+        },
+        {
+          id: 6,
+          label: "ECS",
+          image: "/eks.png",
+          shape: "image",
+        },
+        {
+          id: 7,
+          label: "EC2",
+          image: "/ecs.png",
+          shape: "image",
+        },
+        {
+          id: 8,
+          label: "Pipeline",
+          image: "/ecs.png",
+          shape: "image",
+        },
+        {
+          id: 9,
+          label: "Step Function",
+          image: "/eks.png",
+          shape: "image",
+        },
+
+        // Azure (right)
+        {
+          id: 3,
+          image: "/azure.png",
+          shape: "image",
+          size: 120,
+          x: 300,
+          y: 0,
+          fixed: true,
+        },
+        {
+          id: 10,
+          label: "Glue",
+          image: "/ecs.png",
+          shape: "image",
+        },
+        {
+          id: 11,
+          label: "S3 Sink",
+          image: "/eks.png",
+          shape: "image",
+        },
+        {
+          id: 12,
+          label: "S3 Sink2",
+          image: "/eks.png",
+          shape: "image",
+        },
+        {
+          id: 13,
+          label: "Glue1",
+          image: "/ecs.png",
+          shape: "image",
+        },
+        {
+          id: 14,
+          label: "Step Function1",
+          image: "/eks.png",
+          shape: "image",
+        },
+        {
+          id: 15,
+          label: "Pipeline1",
+          image: "/ecs.png",
+          shape: "image",
+        },
+      ];
+
+      const nodesWithAlerts = staticNodes.map((node) => {
+        const showAlertLabelFor = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+        const alertCount = Math.floor(Math.random() * 6) + 1; // Random between 1–6
+        // const color = colorByCount(alertCount);
+
+        return {
+          ...node,
+          alertCount, // Save it for future use,
+          rawLabel: node.label,
+          label: showAlertLabelFor.includes(node.id)
+            ? // ? `${node.label} *(${alertCount})*`
+              `<i>${node.label}</i> <b>(${alertCount})</b>`
+            : // *This* is a\n_markdown_ *_multi-_ font* `label`
+
+              // `${node.label} (${alertCount})`
+              node.label,
+
+          font: {
+            multi: "html",
+            color: "#fff",
+            size: node.id == 1 ? 24 : 18,
+            face: "Inter",
+            vadjust: -80,
+            strokeWidth: 1,
+            strokeColor: "#fff",
+          },
+        };
+      });
+
+      const nodes = new DataSet(nodesWithAlerts);
+
+      const edges = [
+        { from: 1, to: 2 },
+        { from: 1, to: 3 },
+        { from: 1, to: 4 },
+        { from: 2, to: 5 },
+        { from: 2, to: 6 },
+        { from: 2, to: 7 },
+        { from: 2, to: 8 },
+        { from: 2, to: 9 },
+        { from: 3, to: 10 },
+        { from: 3, to: 11 },
+        { from: 3, to: 15 },
+        { from: 3, to: 14 },
+        { from: 3, to: 13 },
+        { from: 3, to: 12 },
+      ];
+
+      const options = {
+        layout: {
+          randomSeed: 60,
+          improvedLayout: true,
+        },
+        interaction: {
+          navigationButtons: true,
+          zoomView: true,
+        },
+        physics: {
+          enabled: true,
+          solver: "repulsion",
+          repulsion: {
+            nodeDistance: 200,
+            centralGravity: 0,
+            springLength: 200,
+            springConstant: 0.1,
+            damping: 0.4,
+          },
+          stabilization: {
+            iterations: 150,
+            fit: true,
+          },
+        },
+        nodes: {
+          shape: "image",
+          imagePadding: 0,
+          font: { color: "#ffffff", size: 18, face: "Inter", multi: true },
+        },
+        edges: {
+          color: "white",
+          width: 2,
+          length: 300,
+          smooth: {
+            type: "cubicBezier",
+            forceDirection: "horizontal", // or "vertical" for top-down layouts
+            roundness: 0,
+          },
+        },
+      };
+
+      this.network = new Network(this.$refs.vis, { nodes, edges }, options);
+      // this.network = new Network(this.$refs.vis, { nodes, edges }, options);
+      this.network.on("click", this.onNodeClick);
+
+      this.clusterManager = new ZoomClusterManager(
+        this.network,
+        nodesWithAlerts,
+        edges
+      );
+      this.network.on("zoom", this.handleZoom);
+    },
+
+    getBadgeStyle(node) {
+      const pos = this.network.getPositions([node.id])[node.id];
+      const dom = this.network.canvasToDOM(pos);
+      const offset = node.size ? node.size / 2 : 40;
+
+      return {
+        left: `${dom.x + offset}px`,
+        top: `${dom.y - offset}px`,
+        width: "20px",
+        height: "20px",
+        fontSize: "0.625rem",
+        transform: "translate(-50%, -50%)",
+        position: "absolute",
+        zIndex: 999,
+      };
+    },
+
+    async securityScoreValue() {
+      this.score = 444;
+    },
+
+    toggleMetric(label) {
+      const metric = this.metrics.find((m) => m.label === label);
+      if (metric && metric.children) {
+        metric.expanded = !metric.expanded;
+      }
+    },
+
+    async securityScoreGraph() {
+      this.score = 444;
+      this.showGraph = !this.showGraph;
+      this.$nextTick(() => {
+        if (this.showGraph) this.renderGraph();
+      });
+      this.populateMetrics();
+    },
+
+    async populateMetrics() {
+      try {
+        const data = {
+          security_score: { current: 4, old: 5 },
+          IOM_Score: {
+            current: 10,
+            old: 12,
+            IOM_Critical: { current: 10, old: 30 },
+            IOM_High: { current: 5, old: 3 },
+          },
+        };
+
+        // // ✅ Create synthetic graph points from old and current values
+        // const today = new Date();
+        // const yesterday = new Date(today);
+        // yesterday.setDate(today.getDate() - 1);
+
+        // this.graphItems = [
+        //   {
+        //     x: yesterday.toISOString().split("T")[0],
+        //     y: data.security_score.old,
+        //   },
+        //   {
+        //     x: today.toISOString().split("T")[0],
+        //     y: data.security_score.current,
+        //   },
+        // ];
+
+        // const metricData = { ...data };
+        // delete metricData.security_score;
+
+        this.metrics = Object.entries(data).map(([label, value]) => {
+          const children = Object.entries(value)
+            .filter(([k]) => !["current", "old"].includes(k))
+            .reduce((acc, [key, val]) => {
+              acc[key] = {
+                current: val.current,
+                delta: val.current - val.old,
+              };
+              return acc;
+            }, {});
+
+          return {
+            label,
+            current: value.current,
+            old: value.old,
+            delta: value.current - value.old,
+            expanded: false, // required for toggling
+            children: Object.keys(children).length > 0 ? children : null,
+          };
+        });
+      } catch (error) {
+        console.error("❌ Metric fetch error:", error);
+        this.metrics = [];
+      }
+    },
+
+    renderGraph() {
+      this.$nextTick(() => {
+        const container = this.$refs.graphContainer;
+        if (!container) return;
+
+        // Use ResizeObserver to wait for layout sizing
+        const ro = new ResizeObserver(() => {
+          const items = new DataSet([
+            { x: "2025-07-20", y: 60 },
+            { x: "2025-07-21", y: 70 },
+            { x: "2025-07-22", y: 80 },
+            { x: "2025-07-23", y: 75 },
+            { x: "2025-07-24", y: 82 },
+          ]);
+
+          const options = {
+            width: "100%",
+            height: "100%",
+            dataAxis: {
+              showMajorLabels: true,
+              showMinorLabels: true,
+            },
+            timeAxis: {
+              scale: "day",
+              step: 1,
+              format: {
+                major: "ddd D MMM",
+              },
+            },
+            showCurrentTime: false,
+          };
+
+          new Graph2d(container, items, options);
+          ro.disconnect(); // stop observing after 1st layout
+        });
+
+        ro.observe(container);
+      });
+    },
+
+    async fetchSummaryParagraph(nodeId) {
+      try {
+        const res = await fetch(
+          `https://jsonplaceholder.typicode.com/posts/${nodeId}`
+        );
+        const data = await res.json();
+        this.summaryText = data.body; // Use a real API that returns a string summary
+      } catch (error) {
+        console.error("Summary fetch error:", error);
+        this.summaryText = "Unable to load summary at this time.";
+      }
+    },
+
+    async fetchDropdownData() {
+      try {
+        const res = await fetch("https://your-api.com/api/dropdown-status");
+        const data = await res.json(); // expecting: [{ service: 'EMR', status: 'true' }, ...]
+        this.dropdownData = data;
+      } catch (err) {
+        console.error("❌ Failed to load dropdown:", err);
+      }
+    },
+
+    formatColumnTitle(key) {
+      // Convert snake_case or camelCase to Title Case
+      return (
+        key
+          // .replace(/([A-Z])/g, " $1") // insert space before capital letters
+          // .replace(/[_\-]/g, " ") // replace _ or - with space
+          .replace(/\s+/g, " ") // collapse multiple spaces
+          .trim() // remove leading/trailing spaces
+          .replace(/\b\w/g, (char) => char.toUpperCase())
+      ); // capitalize first letter of each word
+    },
+
+    formatMetricTitle(key) {
+      // Convert snake_case or camelCase to Title Case
+      return key
+        .replace(/[_\-]/g, " ") // replace _ or - with space
+        .replace(/\s+/g, " ") // collapse multiple spaces
+        .trim() // remove leading/trailing spaces
+        .replace(/\b\w/g, (char) => char.toUpperCase()); // capitalize first letter of each word
+    },
+
+    formatTableTitle(tableKey) {
+      // Similar idea — convert 'tableA' to 'Table A'
+      return tableKey
+        .replace(/([A-Z])/g, " $1") // split camelCase
+        .replace(/[_\-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+    },
+
+    openCarousel() {
+      this.latestAlerts = this.generateRandomAlerts();
+      this.showCarousel = true;
+    },
+
+    redirectWindow(secTask) {
+      console.log("Received :", secTask);
+    },
+
+    switchGraph() {
+      const container = this.$refs.vis;
+      container.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+      // "opacity 0.6s ease";
+      container.style.opacity = 0;
+
+      setTimeout(() => {
+        this.network.destroy(); // 💥 Destroy previous network
+
+        if (!this.isAlternateView) {
+          // 🔄 Alternate graph
+          const newNodes = [
+            {
+              id: 1001,
+              label: "High",
+              image: "/orange.svg",
+              shape: "image",
+              size: 70,
+              x: -600,
+              y: 0,
+            },
+            {
+              id: 1002,
+              label: "Medium",
+              image: "/yellow.svg",
+              shape: "image",
+              size: 70,
+              x: -300,
+              y: 0,
+            },
+            {
+              id: 1003,
+              label: "Low",
+              image: "/green.svg",
+              shape: "image",
+              size: 70,
+              x: 300,
+              y: 0,
+            },
+            {
+              id: 1004,
+              label: "Alerts",
+              image: "/alert.svg",
+              shape: "image",
+              size: 70,
+              x: 600,
+              y: 0,
+            },
+            {
+              id: 1000,
+              image: "/root2.png",
+              shape: "image",
+              size: 130,
+              x: 0,
+              y: 0,
+              fixed: true,
+            },
+          ];
+          const newEdges = [];
+          const nodes = new DataSet(newNodes);
+          const edges = new DataSet(newEdges);
+
+          const options = {
+            nodes: {
+              shape: "box",
+              font: { color: "white", size: 16, multi: "html" },
+            },
+            edges: { color: "white", width: 2 },
+
+            layout: { improvedLayout: true },
+            interaction: { navigationButtons: true },
+            physics: false,
+          };
+
+          this.network = new Network(container, { nodes, edges }, options);
+        } else {
+          // 🔙 Restore original
+          this.initGraph();
+        }
+
+        this.isAlternateView = !this.isAlternateView;
+        this.network.off("click"); // remove old
+        this.network.on("click", this.onNodeClick); // add fresh
+
+        setTimeout(() => {
+          container.style.opacity = 1;
+        }, 100);
+      }, 400);
+    },
+
+    generateRandomAlerts() {
+      const nodes = ["ECS", "EKS", "EC2", "Glue", "Pipeline", "S3"];
+      return Array.from({ length: 10 }, () => ({
+        node: nodes[Math.floor(Math.random() * nodes.length)],
+        alert: `Alert ${Math.ceil(Math.random() * 5)}`,
+      }));
+    },
+
+    viewLast24Hours() {
+      console.log("📆 24hr View clicked");
+      // Placeholder: Fetch/filter alerts from last 24 hours
+    },
+
+    viewAllAlerts() {
+      console.log("📋 All Alerts clicked");
+      // Placeholder: Show all alerts without filter
+    },
+
+    openShieldAI() {
+      this.showChatbot = true;
+      console.log("🛡️ Shield AI clicked!");
+      // Implement navigation or modal logic here
+    },
+
+    async onNodeClick(params) {
+      const nodeId = params.nodes[0];
+      if (!nodeId) return;
+
+      console.log(nodeId);
+      console.log(this.isAlternateView);
+
+      if (this.isAlternateView && nodeId === 1000) {
+        console.log("Switching to main view");
+        this.switchGraph();
+        return;
+      }
+
+      if (!this.isAlternateView && nodeId === 1) {
+        console.log("Switching to alternate view");
+        this.switchGraph();
+        return;
+      }
+
+      const excludedIds = [1, 2, 3, 4];
+      if (excludedIds.includes(nodeId)) return;
+
+      const node = this.network.body.data.nodes.get(nodeId);
+      this.selectedNode = node;
+
+      // Get canvas position and convert to DOM/screen position
+      const position = this.network.getPositions([nodeId])[nodeId];
+      const domPosition = this.network.canvasToDOM(position);
+
+      this.modalX = domPosition.x;
+      this.modalY = domPosition.y;
+
+      const alerts = await this.fetchAlerts(nodeId);
+      this.top3Items = alerts.slice(0, 3);
+      this.allItems = alerts;
+
+      this.showModal = true;
+
+      // this.fetchSummaryParagraph(nodeId);
+    },
+
+    // fetchAlerts(count) {
+    //   return Array.from({ length: count }, (_, i) => `Alert ${i + 1}`);
+    // },
+    async fetchAlerts(nodeId) {
+      try {
+        const response = await fetch(
+          `https://jsonplaceholder.typicode.com/posts?userId=${nodeId}`
+        );
+        const data = await response.json();
+
+        const result = [
+          {
+            AI_Summary: ["This is my test body"],
+          },
+          {
+            tableA: [
+              {
+                title: "Disk Space Low",
+                severity: "High",
+                region: "us-east-1",
+                justification: "Enter here",
+                sharepoint: "",
+              },
+              {
+                title: "Memory Spike",
+                severity: "Medium",
+                region: "eu-west-1",
+                justification: "Enter here",
+                sharepoint: "https://google.com",
+              },
+            ],
+            tableB: [
+              { id: 1, status: "Open", detail: "Service Down" },
+              { id: 2, status: "Closed", detail: "Auto-healed" },
+            ],
+          },
+        ];
+
+        this.summaryText = result[0]?.summary[0] || "";
+
+        //  Auto-generate multiTables from keys in result
+        this.multiTables = Object.entries(result[1]).map(
+          ([tableKey, records]) => {
+            const sample = records[0] || {};
+
+            const columns = Object.keys(sample).map((key) => {
+              // 1️⃣ Custom formatter for severity
+              if (key === "severity") {
+                return {
+                  title: this.formatColumnTitle(key),
+                  field: key,
+                  formatter: (cell) => {
+                    const value = cell.getValue();
+                    const color =
+                      value === "High"
+                        ? "#dc2626" // 🔴 red
+                        : value === "Medium"
+                        ? "#eab308" // 🟡 yellow
+                        : value === "Low"
+                        ? "#16a34a" // 🟢 green
+                        : "#6b7280"; // gray default
+
+                    return `<div style="
+    background-color: ${color};
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;"><center>${value}</center>
+  </div>`;
+                  },
+                };
+              }
+
+              // 2️⃣ Make justification editable (textarea)
+              if (key === "justification") {
+                return {
+                  title: this.formatColumnTitle(key),
+                  field: key,
+                  editor: "textarea",
+                  editable: true,
+                  cellEdited: (cell) => {
+                    const rowData = cell.getData();
+                    const field = cell.getField();
+                    console.log("📝 Column-level cellEdited triggered");
+                    console.log(rowData);
+
+                    const payload = {
+                      title: rowData.title,
+                      region: rowData.region,
+                      severity: rowData.severity,
+                      justification: rowData.justification,
+                    };
+
+                    fetch("https://your-api.com/api/save-justification/", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(payload),
+                    })
+                      .then((res) => res.json())
+                      .then((resp) => {
+                        console.log("✅ Justification saved:", resp);
+                      })
+                      .catch((err) => {
+                        console.error("❌ Save failed:", err);
+                      });
+                  },
+                };
+              }
+
+              // 3️⃣ All other columns: default config
+              return {
+                title: this.formatColumnTitle(key),
+                field: key,
+              };
+            });
+
+            return {
+              title: this.formatTableTitle(tableKey),
+              columns,
+              data: records,
+            };
+          }
+        );
+
+        return this.multiTables[0]?.data || [];
+      } catch (error) {
+        console.error("Error fetching alerts:", error);
+        return [];
+      }
+    },
+
+    // Step 5 — no change
+    openSidebar() {
+      this.showSidebar = true;
+      this.showModal = false;
+    },
+    handleZoom() {
+      const scale = this.network.getScale();
+      const scaleBucket = Math.floor(scale * 10);
+      const stackLen = this.clusterManager.stackLength;
+
+      if (scaleBucket === this.lastScaleBucket) return;
+      this.lastScaleBucket = scaleBucket;
+
+      console.log("🔍 Zoom scale:", scale);
+      this.clusterManager.logClusterStack();
+
+      // Zoom OUT — progressive clustering
+      // Zoom OUT — progressive clustering
+      if (scale < 0.9 && stackLen < 1) {
+        this.clusterManager.clusterLevel(2);
+        // if (scale < 0.9 && stackLen < 1) {
+        //   this.clusterManager.clusterLevel(6);
+        // } else if (scale < 0.7 && stackLen < 2) {
+        //   this.clusterManager.clusterLevel(5);
+        // } else if (scale < 0.5 && stackLen < 3) {
+        //   this.clusterManager.clusterLevel(4);
+        // } else if (scale < 0.3 && stackLen < 5) {
+        //   this.clusterManager.clusterLevel(3);
+      }
+
+      // Zoom IN — reverse unstacking
+      // else if (scale >= 0.5 && stackLen === 3) {
+      //   this.clusterManager.safeUncluster();
+      // } else if (scale >= 0.7 && stackLen === 2) {
+      //   this.clusterManager.safeUncluster();
+      if (scale >= 0.9 && stackLen === 1) {
+        this.clusterManager.safeUncluster();
+      }
+    },
+  },
+};
+</script>
