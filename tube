@@ -28,7 +28,7 @@
         <!-- With vue-datepicker -->
         <!-- Toggle Button -->
 
-        <nav class="flex items-center space-x-6 text-lg font-medium">
+        <nav class="flex items-center space-x-2 text-lg font-medium">
           <!-- <a href="#home" class="hover:text-indigo-300 transition">Home</a>
           <a href="#about" class="hover:text-indigo-300 transition">About</a> -->
 
@@ -99,7 +99,7 @@
 
           <button
             @click="openShieldAI"
-            class="bg-grey-600 text-white px-3 py-1 font-space tracking-widest drop-shadow-star"
+            class="bg-grey-600 text-white px-3 py-1 font-space tracking-widest glow-text drop-shadow-star"
           >
             Shield AI
           </button>
