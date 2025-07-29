@@ -371,6 +371,7 @@
 
         <div class="overflow-y-auto max-h-[55vh] space-y-4 pr-1">
           <!-- Summary Paragraph -->
+          <h2 class="text-xl font-bold font-space mb-2">AI Insights ✨</h2>
           <div
             v-if="summaryText"
             class="mb-6 p-4 rounded-lg bg-white/10 border border-white/20 shadow text-lg leading-relaxed text-white"
@@ -504,7 +505,7 @@ export default {
       isAlternateView: false,
       showDatePicker: false,
       selectedDate: new Date().toISOString().split("T")[0],
-      summaryText: "",
+      summaryText: "This is a summary",
       multiTables: [],
       rawLabel: "node",
       tableColumns: [
