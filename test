@@ -1,0 +1,8 @@
+<!-- Centered Security Score Overlay -->
+<div
+  class="absolute inset-0 flex justify-center items-center z-30 pointer-events-none"
+>
+  <div class="text-4xl font-bold text-white drop-shadow-xl">
+    Security Score: {{ score }}
+  </div>
+</div>
