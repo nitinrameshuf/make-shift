@@ -1,66 +1,392 @@
-upstream django {
-    server unix:/opt/shield-cloud/gunicorn.sock fail_timeout=0;
-}
+Name: CAIQ SIG Lite Specialist
+   
+   Description: Answers security questionnaire questions using our approved 
+   CAIQ v4.0.3 and SIG Lite responses
+   
+   Icon: Shield or document icon
+```
 
-server {
-    listen 80;
-    server_name your-domain.com www.your-domain.com;  # Replace with your actual domain
-    
-    # Redirect HTTP to HTTPS
-    return 301 https://$host$request_uri;
-}
+### **Step 2: Add ONLY the CAIQ/SIG Lite Knowledge**
 
-server {
-    listen 443 ssl http2;
-    server_name your-domain.com www.your-domain.com;  # Replace with your actual domain
+1. Click **Knowledge** (or "+ Add knowledge")
+2. Select **SharePoint**
+3. Navigate to: **Documents → InfoSec Documents → CAIQ, SIG Lite Responses**
+4. Select BOTH files:
+   - CAIQ v4.0.3 - Sep 2025.xlsx
+   - SIG-Lite.xlsm
+5. Click **Add**
+6. Wait for indexing to complete (may take a few minutes)
 
-    # SSL certificates - update these paths to match your files
-    ssl_certificate /etc/ssl/certs/shield-cloud/your-certificate.crt;
-    ssl_certificate_key /etc/ssl/private/shield-cloud/your-private.key;
-    
-    # If you have a CA bundle/chain file, add this line:
-    # ssl_trusted_certificate /etc/ssl/certs/shield-cloud/ca-bundle.crt;
-    
-    # SSL configuration
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
+**DO NOT add any other folders or files yet.** Keep it laser-focused.
 
-    # HSTS (optional but recommended for production)
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+---
 
-    client_max_body_size 75M;
+### **Step 3: Add These EXACT Instructions**
 
-    access_log /var/log/nginx/django_access.log;
-    error_log /var/log/nginx/django_error.log;
+Copy and paste this into the Instructions field:
+```
+# PRIMARY MISSION
+You are a security questionnaire specialist. Your ONLY job is to find and return 
+our company's pre-approved responses from completed CAIQ and SIG Lite questionnaires.
 
-    location = /favicon.ico { 
-        access_log off; 
-        log_not_found off; 
-    }
+You are NOT a creative writer. You are a response retriever.
 
-    location /static/ {
-        alias /opt/shield-cloud/staticfiles/;
-        expires 30d;
-        add_header Cache-Control "public, immutable";
-    }
+# YOUR KNOWLEDGE BASE
+You have access to:
+- CAIQ v4.0.3 completed questionnaire (September 2025)
+- SIG Lite completed questionnaire
 
-    location /media/ {
-        alias /opt/shield-cloud/media/;
-    }
+These contain our APPROVED responses. Your job is to find the matching question 
+and return our EXACT answer.
 
-    location / {
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Host $http_host;
-        proxy_redirect off;
-        proxy_pass http://django;
-        
-        # Timeouts
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
-}
+# CRITICAL RULES
+
+## Rule 1: Search Protocol
+For EVERY question you receive:
+1. Search CAIQ v4.0.3 spreadsheet first
+2. If not found, search SIG Lite spreadsheet
+3. Look for EXACT question match OR very similar question
+4. If found, return our APPROVED answer EXACTLY as written
+
+## Rule 2: Extreme Brevity
+Our approved responses are EXTREMELY brief. Most are just one word: "Yes" or "No"
+
+NEVER expand on our approved answers. NEVER add explanation.
+
+Examples of our ACTUAL approved responses:
+Q: "Are policies and procedures in place to restrict activities or transactions 
+    for sanctioned countries?"
+A: "Yes"
+
+Q: "Do you have an information security policy?"
+A: "Yes"
+
+That's it. Just "Yes". Not "Yes, we have..." Not "Yes, documented in..." 
+Just: "Yes"
+
+## Rule 3: Exact Replication
+When you find our approved answer:
+- Copy it EXACTLY
+- Do NOT rephrase
+- Do NOT add context
+- Do NOT add explanation
+- Do NOT cite documents (unless our approved answer includes citations)
+
+## Rule 4: Response Format
+
+**If found in CAIQ/SIG Lite:**
+[Our exact approved answer]
+
+Source: CAIQ [Question ID] or SIG Lite [Question number]
+
+**If NOT found in CAIQ/SIG Lite:**
+"This question not found in our completed CAIQ or SIG Lite questionnaires."
+
+Do NOT attempt to answer from general knowledge. Do NOT synthesize an answer.
+Just state it's not in the completed questionnaires.
+
+## Rule 5: Consistency Check
+If asked the SAME question twice, return the EXACT SAME answer word-for-word.
+No variation. No rephrasing. Identical.
+
+# FORBIDDEN BEHAVIORS
+
+❌ NEVER say "I'd be happy to help..."
+❌ NEVER say "Based on the documentation..."
+❌ NEVER say "According to our policies..."
+❌ NEVER add phrases like "Yes, we do..." when the answer is just "Yes"
+❌ NEVER write paragraphs
+❌ NEVER explain your search process
+❌ NEVER apologize
+❌ NEVER say "I don't have access to..." (You DO have access)
+
+# QUALITY CHECKLIST
+
+Before sending ANY response, ask yourself:
+1. ✓ Did I find this EXACT answer in CAIQ or SIG Lite?
+2. ✓ Am I copying it EXACTLY as written?
+3. ✓ Is my response 1-5 words (for most questions)?
+4. ✓ Does this sound like a human compliance person, not ChatGPT?
+5. ✓ If I saw this question again, would I give the IDENTICAL answer?
+
+# EXAMPLES OF CORRECT BEHAVIOR
+
+User: "Do you encrypt data at rest?"
+You: "Yes"
+Source: CAIQ IAM-05
+
+User: "Do you have SOC 2 certification?"
+You: "Yes, SOC 2 Type 2. Report available upon request."
+Source: SIG Lite Q8.2
+
+User: "Describe your incident response process"
+You: [Whatever our EXACT answer is in CAIQ/SIG - no changes]
+Source: CAIQ IVS-09
+
+# EXAMPLES OF WRONG BEHAVIOR
+
+❌ WRONG:
+User: "Do you encrypt data at rest?"
+You: "Yes, we encrypt data at rest using industry-standard encryption protocols..."
+[TOO LONG - Our answer is just "Yes"]
+
+❌ WRONG:
+User: "Do you have an information security policy?"
+You: "Based on our documentation, we maintain comprehensive security policies..."
+[WRONG TONE - Just say "Yes"]
+
+❌ WRONG:
+User: "Are background checks performed?"
+You: "I'd be happy to help! Yes, background checks are conducted in accordance..."
+[WRONG TONE AND TOO LONG]
+
+# SPECIAL INSTRUCTIONS
+
+## For Framework-Specific Wording:
+If user asks "CAIQ question CCM-01" or "SIG Lite question 6.1":
+- Go directly to that specific question
+- Return our exact answer
+- Note the question ID
+
+## For General Questions:
+If user asks in their own words (not framework-specific):
+- Search both CAIQ and SIG Lite for similar questions
+- Find best match
+- Return our approved answer for that match
+- Note which framework question you matched to
+
+## For "Describe" or "Explain" Questions:
+Even if asked to "describe" or "explain":
+- Find our approved answer
+- Return it as-is
+- Do NOT expand or elaborate beyond our approved answer
+- Our approved answers are already appropriately scoped
+
+# REMEMBER
+You are a RETRIEVAL tool, not a GENERATION tool.
+Find → Copy → Return
+That's it.
+
+Shorter is better.
+Consistency is critical.
+Our approved answers are perfect as-is.
+```
+
+---
+
+### **Step 4: Configure Settings**
+
+1. Click **Settings** (gear icon)
+
+2. **Generative AI Settings:**
+   - **Orchestration:** Ensure "Use generative AI orchestration" is **ON**
+   - **Generative answers:** Turn **OFF** (we don't want it using general knowledge)
+   - **How strictly should your agent answer:** Set to **High** (stick to knowledge sources only)
+
+3. **Security & Compliance:**
+   - Enable authentication (Microsoft 365)
+   - Restrict to your organization only
+
+4. **Click Save**
+
+---
+
+### **Step 5: Test with Known Questions**
+
+Create a test document with questions you KNOW are in your CAIQ/SIG Lite and their approved answers.
+
+**Test Set 1: Exact Matches (From Your Screenshots)**
+
+Test these and record results:
+```
+Question 1: "Are policies and procedures in place to restrict activities or 
+transactions for sanctioned countries (e.g., country blocking)?"
+Expected Answer: "Yes"
+Agent's Answer: [Record this]
+Match? Yes/No
+```
+```
+Question 2: "Does [Company] allow clients to conduct testing on their cloud environment?"
+Expected Answer: [Whatever your approved answer is]
+Agent's Answer: [Record this]
+Match? Yes/No
+```
+
+**Test Set 2: Questions You Know Are in CAIQ**
+
+Pull 5-10 questions directly from your CAIQ v4.0.3 spreadsheet:
+```
+Question 3: [Pick from CAIQ - Access Control domain]
+Expected: [Your approved answer]
+Agent: [Record]
+Match? Yes/No
+
+Question 4: [Pick from CAIQ - Encryption domain]
+Expected: [Your approved answer]
+Agent: [Record]
+Match? Yes/No
+
+Question 5: [Pick from CAIQ - Audit domain]
+Expected: [Your approved answer]
+Agent: [Record]
+Match? Yes/No
+```
+
+**Test Set 3: Same Question Twice (Consistency Test)**
+```
+Question 6a: "Do you have an information security policy?"
+Agent Answer 1: [Record]
+
+[Ask something else]
+
+Question 6b: "Do you have an information security policy?" (EXACT SAME)
+Agent Answer 2: [Record]
+
+Are they IDENTICAL word-for-word? Yes/No
+```
+
+**Test Set 4: Paraphrased Questions**
+```
+Question 7a: [Exact wording from CAIQ]
+Agent Answer: [Record]
+
+Question 7b: [Same question but reworded]
+Agent Answer: [Record]
+
+Did it find the same approved answer? Yes/No
+Are both answers identical? Yes/No
+```
+
+**Test Set 5: Questions NOT in CAIQ/SIG Lite**
+```
+Question 8: "What is your AI governance framework?"
+Expected: Should say "Not found in completed questionnaires"
+Agent: [Record]
+Did it correctly refuse to answer? Yes/No
+```
+
+---
+
+### **Step 6: Measure Success**
+
+Create a scoring sheet:
+
+| Metric | Target | Actual | Pass/Fail |
+|--------|--------|--------|-----------|
+| **Accuracy** (finds correct answer) | 90%+ | __% | |
+| **Brevity** (doesn't add extra words) | 90%+ | __% | |
+| **Consistency** (same Q → same A) | 100% | __% | |
+| **Refuses unknown questions** (doesn't hallucinate) | 100% | __% | |
+| **Speed** (response time) | <5 sec | __sec | |
+
+**Passing Criteria:**
+- ✅ 9/10 questions return correct approved answer
+- ✅ Responses match your approved brevity (no extra words)
+- ✅ Same question asked twice = identical answer
+- ✅ Doesn't try to answer questions not in knowledge base
+
+---
+
+### **Step 7: Debug Issues**
+
+**If accuracy is low (<70%):**
+
+**Problem A: Can't find answers in spreadsheets**
+- Excel files might not be indexing well
+- Solution: Create a Word document with all Q&As and add as knowledge source
+
+**Problem B: Finds answer but expands it**
+- Instructions need to be more aggressive
+- Solution: Add even MORE emphasis on brevity
+
+**Problem C: Generic AI responses**
+- Not grounding in knowledge properly
+- Solution: Check settings - ensure "How strictly" is set to High
+
+**If consistency is low:**
+- Agent is regenerating rather than retrieving
+- Add to instructions: "Cache your initial response and reuse EXACTLY"
+
+---
+
+### **Step 8: Iterate Based on Results**
+
+**If results are GOOD (>85% accuracy):**
+1. ✅ Great! This proves the concept works
+2. Next step: Add IT Systems policies folder (controlled expansion)
+3. Test again with policy questions
+4. Gradually expand knowledge base
+
+**If results are MODERATE (60-85%):**
+1. Create **Master_QA_Document.docx** with top 50 Q&As
+2. Add as PRIORITY knowledge source (in addition to spreadsheets)
+3. Adjust instructions to check Master_QA FIRST
+4. Retest
+
+**If results are POOR (<60%):**
+1. Problem is likely Excel file format not indexing well
+2. Create **Word document version** of all CAIQ/SIG Lite Q&As
+3. Use that instead of spreadsheets
+4. Retest
+
+---
+
+## What to Report Back
+
+After testing, please share:
+
+**1. Accuracy Results:**
+```
+Tested: 10 questions
+Found correct answer: __/10
+Matched our exact brevity: __/10
+Consistency (same Q twice): __/2
+Refused unknown questions: __/2
+```
+
+**2. Example Responses:**
+
+Share 3-4 examples showing:
+- The question you asked
+- Your approved answer
+- What the agent said
+- Whether it matched
+
+**3. Issues Observed:**
+
+Note any patterns:
+- Is it always too verbose?
+- Does it find answers but rephrase them?
+- Does it fail to find answers that definitely exist?
+- Is it inconsistent?
+
+---
+
+## Pro Tips for This Test
+
+### **Tip 1: Test from the Spreadsheet First**
+
+Open your CAIQ v4.0.3 spreadsheet, copy 10 questions EXACTLY as written (including question IDs), and test those first. This eliminates any ambiguity about whether the answer exists.
+
+### **Tip 2: Document Everything**
+
+Create a test log:
+```
+Test Log - CAIQ/SIG Lite Specialist Agent
+
+Date: [Today]
+Tester: [You]
+
+Test 1:
+Question: [Exact question]
+Expected: [Your approved answer]
+Agent Said: [Copy-paste full response]
+Score: ✓ or ✗
+Notes: [Any issues]
+
+[Repeat for all tests]
+
+Summary:
+- Accuracy: __/10
+- Issues: [List]
+- Next steps: [What to fix]
