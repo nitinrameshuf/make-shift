@@ -1,16 +1,1 @@
-GetCallerIdentity  
-ListRepositories  
-DescribeRepositories  
-DescribeRepositories  
-DescribeRepositories  
-DescribeRepositories  
-GetAuthorizationToken  
-ListImages  
-BatchGetImage  
-GetDownloadUrlForLayer  
-GetDownloadUrlForLayer  
-GetDownloadUrlForLayer  
-InitiateLayerUpload  
-UploadLayerPart  
-CompleteLayerUpload  
-PutImage  
+Repository
