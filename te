@@ -1,24 +1,33 @@
-server {
-    listen 80;
-    server_name shieldcloud.vbrick.com 3.94.66.188;
+# Make the socket context permanent
+sudo semanage fcontext -a -t httpd_sys_rw_content_t "/opt/shield/gunicorn.sock"
 
-    client_max_body_size 100M;
+# Apply it
+sudo restorecon -v /opt/shield/gunicorn.sock
 
-    location = /favicon.ico { access_log off; log_not_found off; }
-    
-    location /static/ {
-        alias /opt/shield/shield-cloud/staticfiles/;
-    }
+# Verify it's set
+sudo semanage fcontext -l | grep gunicorn
 
-    location /media/ {
-        alias /opt/shield/shield-cloud/media/;
-    }
+# Restart gunicorn to recreate the socket
+sudo systemctl restart gunicorn
 
-    location / {
-        proxy_pass http://unix:/opt/shield/gunicorn.sock;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
+# Check the context is still correct
+ls -Z /opt/shield/gunicorn.sock
+
+# Should show: system_u:object_r:httpd_sys_rw_content_t:s0
+
+# Verify no new SELinux denials
+sudo ausearch -m avc -ts recent
+
+# Test the site still works
+curl -I http://localhost
+
+# All services running
+sudo systemctl status gunicorn
+sudo systemctl status nginx
+
+# SELinux enforcing and allowing connections
+getenforce  # Should show: Enforcing
+getsebool httpd_can_network_connect  # Should show: on
+
+# Site accessible
+curl -I http://3.94.66.188
