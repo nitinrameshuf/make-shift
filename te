@@ -1,33 +1,9 @@
-# Make the socket context permanent
-sudo semanage fcontext -a -t httpd_sys_rw_content_t "/opt/shield/gunicorn.sock"
+# Generate and install policy from the denials
+sudo ausearch -m avc -ts recent | audit2allow -M shield_nginx_gunicorn
+sudo semodule -i shield_nginx_gunicorn.pp
 
-# Apply it
-sudo restorecon -v /opt/shield/gunicorn.sock
+# Restart nginx
+sudo systemctl restart nginx
 
-# Verify it's set
-sudo semanage fcontext -l | grep gunicorn
-
-# Restart gunicorn to recreate the socket
-sudo systemctl restart gunicorn
-
-# Check the context is still correct
-ls -Z /opt/shield/gunicorn.sock
-
-# Should show: system_u:object_r:httpd_sys_rw_content_t:s0
-
-# Verify no new SELinux denials
+# Check for new denials
 sudo ausearch -m avc -ts recent
-
-# Test the site still works
-curl -I http://localhost
-
-# All services running
-sudo systemctl status gunicorn
-sudo systemctl status nginx
-
-# SELinux enforcing and allowing connections
-getenforce  # Should show: Enforcing
-getsebool httpd_can_network_connect  # Should show: on
-
-# Site accessible
-curl -I http://3.94.66.188
