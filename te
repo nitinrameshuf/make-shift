@@ -1,9 +1,168 @@
-# Generate and install policy from the denials
-sudo ausearch -m avc -ts recent | audit2allow -M shield_nginx_gunicorn
+# ============================================
+# 1. SETUP PROJECT DIRECTORY AND PERMISSIONS
+# ============================================
+sudo chown -R ec2-user:ec2-user /opt/shield
+cd /opt/shield
+
+# ============================================
+# 2. CLONE AND SETUP PYTHON ENVIRONMENT
+# ============================================
+# Clone your Django project
+git clone <your-repo-url> shield-cloud
+
+# Create virtual environment
+python3 -m venv shieldenv
+
+# Activate venv
+source shieldenv/bin/activate
+
+# Install dependencies
+pip install --upgrade pip
+pip install -r shield-cloud/requirements.txt
+
+# ============================================
+# 3. DJANGO SETUP
+# ============================================
+cd shield-cloud
+python manage.py migrate
+python manage.py collectstatic --noinput
+
+# Test Django works
+python manage.py runserver 0.0.0.0:8000
+# Ctrl+C to stop after verifying
+
+# ============================================
+# 4. CREATE GUNICORN SERVICE
+# ============================================
+sudo tee /etc/systemd/system/gunicorn.service > /dev/null <<EOF
+[Unit]
+Description=Gunicorn daemon for Shield Cloud
+After=network.target
+
+[Service]
+User=ec2-user
+Group=nginx
+WorkingDirectory=/opt/shield/shield-cloud
+Environment="PATH=/opt/shield/shieldenv/bin"
+RuntimeDirectory=gunicorn
+RuntimeDirectoryMode=0775
+UMask=0007
+ExecStart=/opt/shield/shieldenv/bin/gunicorn \
+    --workers 3 \
+    --bind unix:/run/gunicorn/gunicorn.sock \
+    shieldcloud.wsgi:application
+
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# ============================================
+# 5. CREATE NGINX CONFIGURATION
+# ============================================
+sudo tee /etc/nginx/conf.d/shieldcloud.conf > /dev/null <<EOF
+server {
+    listen 80;
+    server_name shieldcloud.vbrick.com 3.94.66.188;
+
+    client_max_body_size 100M;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    
+    location /static/ {
+        alias /opt/shield/shield-cloud/staticfiles/;
+    }
+
+    location /media/ {
+        alias /opt/shield/shield-cloud/media/;
+    }
+
+    location / {
+        proxy_pass http://unix:/run/gunicorn/gunicorn.sock;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+
+# ============================================
+# 6. SETUP PERMISSIONS
+# ============================================
+# Add nginx user to ec2-user group
+sudo usermod -a -G ec2-user nginx
+
+# Verify
+groups nginx
+
+# Set directory permissions
+sudo chmod 755 /opt
+sudo chmod 755 /opt/shield
+
+# ============================================
+# 7. CONFIGURE SELINUX
+# ============================================
+# Enable httpd network connections
+sudo setsebool -P httpd_can_network_connect 1
+
+# Create custom SELinux policy for socket access
+# (Run this after starting services to capture denials)
+sudo ausearch -m avc -ts recent | sudo audit2allow -M shield_nginx_gunicorn
 sudo semodule -i shield_nginx_gunicorn.pp
 
-# Restart nginx
-sudo systemctl restart nginx
+# ============================================
+# 8. START AND ENABLE SERVICES
+# ============================================
+# Reload systemd
+sudo systemctl daemon-reload
 
-# Check for new denials
+# Start and enable gunicorn
+sudo systemctl start gunicorn
+sudo systemctl enable gunicorn
+
+# Test nginx config
+sudo nginx -t
+
+# Start and enable nginx
+sudo systemctl restart nginx
+sudo systemctl enable nginx
+
+# ============================================
+# 9. VERIFY EVERYTHING
+# ============================================
+# Check services
+sudo systemctl status gunicorn
+sudo systemctl status nginx
+
+# Check socket
+ls -la /run/gunicorn/
+
+# Check SELinux
+getenforce  # Should show: Enforcing
+getsebool httpd_can_network_connect  # Should show: on
+
+# Check for SELinux denials
 sudo ausearch -m avc -ts recent
+
+# Test locally
+curl -I http://localhost
+
+# Check logs if needed
+sudo journalctl -u gunicorn -n 50 --no-pager
+sudo tail -50 /var/log/nginx/error.log
+
+# ============================================
+# 10. TROUBLESHOOTING COMMANDS (IF NEEDED)
+# ============================================
+# If you get SELinux denials after starting:
+# sudo ausearch -m avc -ts recent | sudo audit2allow -M shield_nginx_gunicorn
+# sudo semodule -i shield_nginx_gunicorn.pp
+# sudo systemctl restart nginx
+
+# If socket permissions wrong:
+# sudo chown ec2-user:nginx /run/gunicorn/gunicorn.sock
+# sudo chmod 660 /run/gunicorn/gunicorn.sock
+# sudo systemctl restart nginx
