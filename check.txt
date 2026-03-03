@@ -1,0 +1,19 @@
+ALTER TABLE POAM 
+  MODIFY COLUMN POAM_ID VARCHAR(20),
+  MODIFY COLUMN Controls VARCHAR(20),
+  MODIFY COLUMN Cvss_Score VARCHAR(20),
+  MODIFY COLUMN Finding_Status VARCHAR(20),
+  MODIFY COLUMN Original_Risk_Rating VARCHAR(20),
+  MODIFY COLUMN Adjusted_Risk_Rating VARCHAR(20);
+
+
+
+
+SELECT 
+  MAX(LENGTH(POAM_ID)),
+  MAX(LENGTH(Controls)),
+  MAX(LENGTH(Cvss_Score)),
+  MAX(LENGTH(Finding_Status)),
+  MAX(LENGTH(Original_Risk_Rating)),
+  MAX(LENGTH(Adjusted_Risk_Rating))
+FROM POAM;
